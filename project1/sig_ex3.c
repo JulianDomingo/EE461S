@@ -30,11 +30,11 @@
 int pipefd[2];
 int status, pid_ch1, pid_ch2, pid;
 
-static void sig_int(int signo) {
+static void sig_int() {
   printf("Sending signals to group:%d\n",pid_ch1); // group id is pid of first in pipeline
   kill(-pid_ch1,SIGINT);
 }
-static void sig_tstp(int signo) {
+static void sig_tstp() {
   printf("Sending SIGTSTP to group:%d\n",pid_ch1); // group id is pid of first in pipeline
   kill(-pid_ch1,SIGTSTP);
 }
@@ -53,45 +53,48 @@ int main(void) {
     printf("Child1 pid = %d\n",pid_ch1);
     // Parent
     pid_ch2 = fork();
-    if (pid_ch2 > 0){
+    if (pid_ch2 > 0) {
       printf("Child2 pid = %d\n",pid_ch2);
       if (signal(SIGINT, sig_int) == SIG_ERR)
-	printf("signal(SIGINT) error");
+    	printf("signal(SIGINT) error");
       if (signal(SIGTSTP, sig_tstp) == SIG_ERR)
-	printf("signal(SIGTSTP) error");
+    	printf("signal(SIGTSTP) error");
       close(pipefd[0]); //close the pipe in the parent
       close(pipefd[1]);
       int count = 0;
       while (count < 2) {
-	// Parent's wait processing is based on the sig_ex4.c
-	pid = waitpid(-1, &status, WUNTRACED | WCONTINUED);
-	// wait does not take options:
-	//    waitpid(-1,&status,0) is same as wait(&status)
-	// with no options waitpid wait only for terminated child processes
-	// with options we can specify what other changes in the child's status
-	// we can respond to. Here we are saying we want to also know if the child
-	// has been stopped (WUNTRACED) or continued (WCONTINUED)
-	if (pid == -1) {
-	  perror("waitpid");
-	  exit(EXIT_FAILURE);
-	}
-	
-	if (WIFEXITED(status)) {
-	  printf("child %d exited, status=%d\n", pid, WEXITSTATUS(status));count++;
-	} else if (WIFSIGNALED(status)) {
-	  printf("child %d killed by signal %d\n", pid, WTERMSIG(status));count++;
-	} else if (WIFSTOPPED(status)) {
-	  printf("%d stopped by signal %d\n", pid,WSTOPSIG(status));
-	  printf("Sending CONT to %d\n", pid);
-	  sleep(4); //sleep for 4 seconds before sending CONT
-	  kill(pid,SIGCONT);
-	} else if (WIFCONTINUED(status)) {
-	  printf("Continuing %d\n",pid);
-	}
+        // parent's wait processing is based on the sig_ex4.c
+        pid = waitpid(-1, &status, WUNTRACED | WCONTINUED);
+        // wait does not take options:
+        //    waitpid(-1,&status,0) is same as wait(&status)
+        // with no options waitpid wait only for terminated child processes
+        // with options we can specify what other changes in the child's status
+        // we can respond to. here we are saying we want to also know if the child
+        // has been stopped (wuntraced) or continued (wcontinued)
+        if (pid == -1) {
+        perror("waitpid");
+            exit(EXIT_FAILURE);
+        }
+
+        if (WIFEXITED(status)) {
+            printf("child %d exited, status=%d\n", pid, WEXITSTATUS(status));
+            count++;
+        } else if (WIFSIGNALED(status)) {
+            printf("child %d killed by signal %d\n", pid, WTERMSIG(status));
+            count++;
+        } else if (WIFSTOPPED(status)) {
+            printf("%d stopped by signal %d\n", pid,WSTOPSIG(status));
+            printf("sending cont to %d\n", pid);
+            sleep(4); //sleep for 4 seconds before sending cont
+            kill(pid,SIGCONT);
+        } else if (WIFCONTINUED(status)) {
+            printf("continuing %d\n",pid);
+        }
       }
       exit(1);
-    }else {
-      //Child 2
+    }
+    else {
+      //child 2
       sleep(1);
       setpgid(0,pid_ch1); //child2 joins the group whose group id is same as child1's pid
       close(pipefd[1]); // close the write end
@@ -103,14 +106,14 @@ int main(void) {
       execvp(myargs[0], myargs);  // runs word count
     }
   } else {
-      // Child 1
+      // child 1
     setsid(); // child 1 creates a new session and a new group and becomes leader -
               //   group id is same as his pid: pid_ch1
     close(pipefd[0]); // close the read end
     dup2(pipefd[1],STDOUT_FILENO);
     char *myargs[2];
     myargs[0] = strdup("top");   // program: "top" (writes to stdout which is now pipe)
-    myargs[1] = NULL;           
+    myargs[1] = NULL; 
     execvp(myargs[0], myargs);  // runs top
   }
 }
