@@ -1,4 +1,4 @@
-struct bg_jobs_linked_list_t bg_jobs;
+extern struct bg_jobs_linked_list_t head; 
 
 typedef struct bg_jobs_linked_list_t {
     size_t size;

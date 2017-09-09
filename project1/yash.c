@@ -13,16 +13,19 @@
 #include <unistd.h>
 
 #include "yash.h"
-#include "jobs.h"
-
-const int MAX_CHARACTER_LIMIT = 2000;
+#include "bg_jobs.h"
+#include "process_group.h"
+#include "parse.h"
 
 int status;
 int pipefd[2];
 char **parsed_input;
+bool show_terminal_prompt;
 pid_t process_group_id;
 pid_t pid_child1;
 pid_t pid_child2;
+
+// TODO: Use sigaction struct
 
 /*
  * Sends a signal from the parent process to the processes
@@ -41,7 +44,7 @@ static void sig_tstp() {
 }
 
 /*
- * Sends a signal from the child process to the parent process (yash) indicating the child process has either terminated or suspended. 
+ * Sends a signal from the child process to the parent process (yash) indicating the child process has either terminated or suspended.
  */
 static void sig_chld() {
     kill(-pid_shell, SIGCHLD);
@@ -56,7 +59,8 @@ static void parse_input(char *shell_input) {
 
 /*
  * Sets the process group ID as its own process ID, reroutes 
- * command 1 output from STDOUT to write-end of pipe, and execs command. 
+ * command 1 output from STDOUT to write-end of pipe, and execs
+ * the first command.
  */
 void handle_child1() {
     setsid();
@@ -66,17 +70,19 @@ void handle_child1() {
     execvp(parsed_input[0], parsed_input);
 }
 
+/*
+ * Joins the process group from child1, redirects file descriptors as needed,
+ * and execs the second command (if present).
+ */
 void handle_child2() {
 
 }
 
 int main() {    
-    char shell_input[MAX_CHARACTER_LIMIT + 1];
-    
     // initialize yash shell
     struct yash_t yash;
     yash.process_id = getpid();
-    yash.bg_jobs_list = malloc(sizeof(bg_jobs));
+    yash.bg_jobs_list = malloc(sizeof(head));
     yash.current_process_group = NULL;
    
     if (pipe(pipefd) == -1) {
@@ -84,13 +90,21 @@ int main() {
         exit(EXIT_FAILURE);
     }
 
-    // continue reading shell commands
-    while (true) {
-        printf("%s", "# ");
-    
-        fgets(shell_input, MAX_CHARACTER_LIMIT, stdin);
+    show_terminal_prompt = true;
 
-        parse_input(&shell_input);
+    while (true) {
+        if (show_terminal_prompt) {
+            printf("%s", "# ");
+        }
+   
+        // read shell command
+        fgets(shell_input, MAX_CHARACTER_LIMIT, stdin);
+        shell_input[strlen(shell_input) - 1] = '\0';
+
+        // check if no command entered
+        if (strlen(shell_input) == 0) { 
+            continue;
+        }
 
         pid_child1 = fork();
 
@@ -103,9 +117,9 @@ int main() {
                 close(pipefd[0]); 
                 close(pipefd[1]);
                
-                int children_exited_or_killed = 0; 
+                int counter = 0; 
 
-                while (children_exited_or_killed < 2) {
+                while (counter < 2) {
                     pid_t pid = waitpid(-1, &status, WUNTRACED | WCONTINUED);  
 
                     if (pid == -1) {
@@ -114,19 +128,22 @@ int main() {
                     }
 
                     if (WIFEXITED(status)) {
-
+                        printf("child %d exited, status=%d\n", pid, WEXITSTATUS(status));
+                        count++;
                     }
-                    else if (WIFEXITED(status)) {
-
+                    else if (WIFSIGNALED(status)) {
+                        count++;    
                     }
                     else if (WIFSTOPPED(status)) {
-
+                        printf("%d stopped by signal %d\n", pid, WSTOPSIG(status));
+                        printf("sending cont to %d\n"m pid);
+                        sleep(4);
+                        kill(pid, SIGCONT);
                     }
                     else if (WIFCONTINUED(status)) {
-
+                        printf("continuing %d\n", pid);
                     }
                 }
-
                 exit(EXIT_SUCCESS);
             }
             else {
