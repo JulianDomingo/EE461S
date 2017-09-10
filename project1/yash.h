@@ -15,7 +15,8 @@ extern pid_t pid_child2;
 typedef struct yash_t {
     pid_t process_id;
     struct bg_jobs_linked_list_t bg_jobs_list;
-    struct process_group_t current_process_group; 
+    struct process_group_t active_process_group; 
+    struct process_group_t fg_job;
 } yash_t;
 
 static void sig_handler(int signum);

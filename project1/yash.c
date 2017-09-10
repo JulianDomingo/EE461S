@@ -25,7 +25,7 @@ pid_t process_group_id;
 pid_t pid_child1;
 pid_t pid_child2;
 
-volatile atomic_t signal_from_child;
+volatile atomic_t signal_from_child_process;
 
 /*
  * http://pubs.opengroup.org/onlinepubs/009695399/functions/sigaction.html
@@ -33,13 +33,13 @@ volatile atomic_t signal_from_child;
 static void sighandler(int signum) {
     switch (signum) {
         case SIGINT:
-            signal_from_child = SIGINT;
+            signal_from_child_process = SIGINT;
             break; 
         case SIGTSTP:
-            signal_from_child = SIGTSTP;
+            signal_from_child_process = SIGTSTP;
             break;
         case SIGCHLD:
-            signal_from_child = SIGCHLD;
+            signal_from_child_process = SIGCHLD;
             break;
     }
 }
@@ -49,7 +49,8 @@ int main() {
     struct yash_t yash;
     yash.process_id = getpid();
     yash.bg_jobs_list = malloc(sizeof(head));
-    yash.current_process_group = NULL;
+    yash.active_process_group = NULL;
+    yash.fg_job = NULL;
 
     // initialize sigaction struct to handle received signals from child processes
     // http://pubs.opengroup.org/onlinepubs/009695399/functions/sigaction.html
@@ -77,33 +78,55 @@ int main() {
     show_terminal_prompt = true;
 
     while (true) {
+        if (show_terminal_prompt) {
+            printf("%s", "# ");
+        }
+   
         // Handle signal interruptions first
-        switch (signal_from_child) {
+        process_group_t fg_job = yash.fg_job; 
+
+        switch (signal_from_child_process) {
             case SIGINT:
-                // TODO: Implement logic
+                if (fg_job) {
+                    killpg(fg_job.process_group_id, SIGINT); 
+                } 
+                printf("\n");
+                signal_from_child_process = 0;
                 break;
+
             case SIGTSTP:
-                // TODO: Implement logic
+                if (fg_job) {
+                    killpg(fg_job.process_group_id, SIGTSTP); 
+                }
+                printf("\n");
+                signal_from_child_process = 0;
                 break;
+            
             case SIGCHLD:
-                // TODO: Implement logic
+                if (fg_job) {
+                    // reap zombie process
+                    destroy_process_group(&fg_job); 
+                }
+                printf()
+                signal_from_child_process = 0;
                 break;
+           
             default:
                 // No signal received
                 break;
         }
 
-        if (show_terminal_prompt) {
-            printf("%s", "# ");
-        }
-   
-        // read shell command
+        // read shell command 
         fgets(shell_input, MAX_CHARACTER_LIMIT, stdin);
         shell_input[strlen(shell_input) - 1] = '\0';
-
+        
         // check if no command entered
-        if (trim(strlen(shell_input) == 0)) { 
+        if (strlen(trim(shell_input)) == 0) { 
             continue;
+        }
+        else {
+            parse_input(&shell_input, &yash);
+            execute_input(&yash);
         }
     }
 }
