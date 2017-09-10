@@ -17,3 +17,5 @@ typedef struct yash_t {
     struct bg_jobs_linked_list_t bg_jobs_list;
     struct process_group_t current_process_group; 
 } yash_t;
+
+static void sig_handler(int signum);
