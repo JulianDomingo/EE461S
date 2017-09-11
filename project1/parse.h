@@ -1,3 +1,6 @@
+#ifndef _PARSE_H_
+#define _PARSE_H_ 
+
 /* 
  * Name: Julian Domingo
  * UT EID: jad5348
@@ -7,8 +10,10 @@
 
 #include "yash.h"
 
-extern const int MAX_CHARACTER_LIMIT;
+static const int MAX_CHARACTER_LIMIT = 2000;
 
-static bool parse_input(char *shell_input, yash_t *yash);
-static void execute_input(yash_t *yash); 
-static char *trim(char *untrimmed);
+bool parse_input(char *shell_input, yash_t *yash);
+void execute_input(yash_t *yash); 
+char *trim(char *untrimmed);
+
+#endif

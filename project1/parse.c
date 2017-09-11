@@ -6,26 +6,28 @@
 #include <stdbool.h>
 #include <ctype.h>
 #include <string.h>
+#include <unistd.h>
+#include <sys/types.h>
 
 #include "parse.h"
 #include "yash.h"
 
-const int MAX_CHARACTER_LIMIT = 2000;
+#define MAX_CHARACTER_LIMIT = 2000;
 
 /*
  * Parses the input read from STDIN, 
  * dependent on the content of the command given.
  */
-static bool parse_input(char **shell_input, yash_t *yash) {
-    char *trimmed_shell_input = trim(*shell_input);     
+bool parse_input(char *shell_input, yash_t *yash) {
+    char *trimmed_shell_input = trim(shell_input);     
 
-    int length = strlen(*shell_input);
+    int length = strlen(shell_input);
 
     char **command;
-    const char[2] delimiter = " ";
+    const char delimiter[2]= " ";
     char *token;
 
-    token = strtok(*shell_input, delimiter);
+    token = strtok(shell_input, delimiter);
 
     while (token != NULL) {
         switch (token) {
@@ -59,9 +61,9 @@ static bool parse_input(char **shell_input, yash_t *yash) {
 } 
 
 /*
- * Trims all leading and trailing whitespace from the "untrimmed" string.
+ * Trims all leading and trailing whitespace from the string.
  */
-static char *trim(char *untrimmed) {
+char *trim(char *untrimmed) {
     char *end;
    
     // remove leading whitespace
@@ -82,12 +84,13 @@ static char *trim(char *untrimmed) {
     // define new string terminator
     *(end + 1) = '\0';
 
+    printf("Trimmed: %s\n", untrimmed);
     return untrimmed;
 }
 
 /*
  * Retrieves the the active process group and executes its commmand(s).
  */
-static void execute_input(yash_t *yash) {
-
+void execute_input(yash_t *yash) {
+    // TODO: Implement
 } 

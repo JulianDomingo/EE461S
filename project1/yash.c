@@ -12,27 +12,24 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-#include "yash.h"
-#include "bg_jobs.h"
-#include "process_group.h"
 #include "parse.h"
+#include "process_group.h"
+#include "bg_jobs.h"
+#include "yash.h"
 
 int status;
 int pipefd[2];
 char **parsed_input;
 bool show_terminal_prompt;
-pid_t process_group_id;
-pid_t pid_child1;
-pid_t pid_child2;
-
-volatile atomic_t signal_from_child_process;
+volatile sig_atomic_t signal_from_child_process;
 
 /*
  * http://pubs.opengroup.org/onlinepubs/009695399/functions/sigaction.html
  */
-static void sighandler(int signum) {
+void sig_handler(int signum) {
     switch (signum) {
         case SIGINT:
+            printf("\n"); 
             signal_from_child_process = SIGINT;
             break; 
         case SIGTSTP:
@@ -45,15 +42,16 @@ static void sighandler(int signum) {
 }
 
 int main() {    
+    char shell_input[MAX_CHARACTER_LIMIT];
+
     // initialize yash shell
     struct yash_t yash;
     yash.process_id = getpid();
-    yash.bg_jobs_list = malloc(sizeof(head));
     yash.active_process_group = NULL;
     yash.fg_job = NULL;
+    yash.bg_jobs_list = malloc(sizeof(head));
 
     // initialize sigaction struct to handle received signals from child processes
-    // http://pubs.opengroup.org/onlinepubs/009695399/functions/sigaction.html
     struct sigaction sa;
     sa.sa_handler = sig_handler;
     sigemptyset(&sa.sa_mask);
@@ -78,36 +76,35 @@ int main() {
     show_terminal_prompt = true;
 
     while (true) {
-        // TODO: Figure out when to not show terminal prompt based on signal / command given to parent process
         if (show_terminal_prompt) {
             printf("%s", "# ");
         }
     
         // Handle signal interruptions first
-        process_group_t fg_job = yash.fg_job; 
+        process_group_t *fg_job = yash.fg_job; 
 
         switch (signal_from_child_process) {
             case SIGINT:
-                if (fg_job) {
-                    killpg(fg_job.process_group_id, SIGINT); 
-                } 
-                printf("\n");
+                /*if (fg_job) {*/
+                    /*killpg(fg_job.process_group_id, SIGINT); */
+                /*} */
+                /*printf("\n");*/
                 signal_from_child_process = 0;
                 break;
 
             case SIGTSTP:
-                if (fg_job) {
-                    killpg(fg_job.process_group_id, SIGTSTP); 
-                }
-                printf("\n");
+                /*if (fg_job) {*/
+                    /*killpg(fg_job.process_group_id, SIGTSTP); */
+                /*}*/
+                /*printf("\n");*/
                 signal_from_child_process = 0;
                 break;
             
             case SIGCHLD:
-                if (fg_job) {
-                    // reap zombie process
-                    destroy_process_group(&fg_job); 
-                }
+                /*if (fg_job) {*/
+                    /*// reap zombie process*/
+                    /*destroy_process_group(&fg_job); */
+                /*}*/
                 signal_from_child_process = 0;
                 break;
            
@@ -119,14 +116,15 @@ int main() {
         // read shell command 
         fgets(shell_input, MAX_CHARACTER_LIMIT, stdin);
         shell_input[strlen(shell_input) - 1] = '\0';
-        
+
         // check if no command entered
         if (strlen(trim(shell_input)) == 0) { 
+            printf("No command was entered.\n");
             continue;
         }
-        else {
-            parse_input(&shell_input, &yash);
-            execute_input(&yash);
-        }
+        /*else {*/
+            /*parse_input(&shell_input, &yash);*/
+            /*execute_input(&yash);*/
+        /*}*/
     }
 }
