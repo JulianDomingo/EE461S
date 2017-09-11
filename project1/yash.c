@@ -24,13 +24,12 @@ bool show_terminal_prompt;
 volatile sig_atomic_t signal_from_child_process;
 
 /*
- * http://pubs.opengroup.org/onlinepubs/009695399/functions/sigaction.html
+ * Handler for needed signals to implement.  
  */
-void sig_handler(int signum) {
+static void sig_handler(int signum) {
     switch (signum) {
         case SIGINT:
-            printf("\n"); 
-            signal_from_child_process = SIGINT;
+            signal_from_child_process = SIGINT; 
             break; 
         case SIGTSTP:
             signal_from_child_process = SIGTSTP;
@@ -49,24 +48,24 @@ int main() {
     yash.process_id = getpid();
     yash.active_process_group = NULL;
     yash.fg_job = NULL;
-    yash.bg_jobs_list = malloc(sizeof(head));
+    yash.bg_jobs_stack = malloc(sizeof(head));
 
-    // initialize sigaction struct to handle received signals from child processes
-    struct sigaction sa;
+    // initialize sigaction struct
+    struct sigaction sa; 
     sa.sa_handler = sig_handler;
     sigemptyset(&sa.sa_mask);
 
     // Handles signal errors 
-    if (sigaction(SIGINT, &sa, NULL) == -1) {
-        perror("sigaction(SIGINT) error");
-    }
+    if (sigaction(SIGINT, &sa, NULL) == -1) { 
+        printf("signal(SIGINT) error");
+    } 
     if (sigaction(SIGTSTP, &sa, NULL) == -1) {
-        perror("sigaction(SIGTSTP) error");
-    } 
+        printf("signal(SIGTSTP) error");
+    }
     if (sigaction(SIGCHLD, &sa, NULL) == -1) {
-        perror("sigaction(SIGCHLD) error");
+        printf("signal(SIGCHLD) error");
     } 
-   
+
     // Handles pipe error
     if (pipe(pipefd) == -1) {
         perror("pipe");
@@ -76,55 +75,58 @@ int main() {
     show_terminal_prompt = true;
 
     while (true) {
-        if (show_terminal_prompt) {
-            printf("%s", "# ");
-        }
-    
         // Handle signal interruptions first
-        process_group_t *fg_job = yash.fg_job; 
+        process_group_t *foreground_job = yash.fg_job; 
 
         switch (signal_from_child_process) {
             case SIGINT:
-                /*if (fg_job) {*/
-                    /*killpg(fg_job.process_group_id, SIGINT); */
-                /*} */
-                /*printf("\n");*/
+                if (foreground_job) {
+                    // Send SIGINT to the foreground job 
+                    killpg(foreground_job->process_group_id, SIGINT);
+                }
+                fputc('\n', stdout);
                 signal_from_child_process = 0;
                 break;
 
             case SIGTSTP:
-                /*if (fg_job) {*/
-                    /*killpg(fg_job.process_group_id, SIGTSTP); */
-                /*}*/
-                /*printf("\n");*/
+                if (foreground_job) {
+                    // Send SIGTSTP to the foreground job 
+                    killpg(foreground_job->process_group_id, SIGTSTP); 
+                    // TODO: Move the foreground job to background
+                }
+                fputc('\n', stdout);
                 signal_from_child_process = 0;
                 break;
             
             case SIGCHLD:
-                /*if (fg_job) {*/
-                    /*// reap zombie process*/
-                    /*destroy_process_group(&fg_job); */
-                /*}*/
+                if (foreground_job) {
+                    // TODO: recognize child process has terminated by removing the foreground job
+                    // from the yash session 
+                }
                 signal_from_child_process = 0;
                 break;
-           
+            
             default:
-                // No signal received
+                // No signal, do nothing 
                 break;
         }
 
+        if (show_terminal_prompt) {
+            printf("%s", "# ");
+        }
+        
         // read shell command 
         fgets(shell_input, MAX_CHARACTER_LIMIT, stdin);
         shell_input[strlen(shell_input) - 1] = '\0';
 
         // check if no command entered
         if (strlen(trim(shell_input)) == 0) { 
-            printf("No command was entered.\n");
             continue;
         }
-        /*else {*/
+        else {
+            // retrieve command(s) and execute them
             /*parse_input(&shell_input, &yash);*/
             /*execute_input(&yash);*/
-        /*}*/
+        }
     }
 }

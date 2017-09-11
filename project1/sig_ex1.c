@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
+
 /*
 These are the POSIX signals, their numbers and what they are for
       Signal     Signo     Action   Comment
@@ -37,14 +38,7 @@ To send a signal to a process from the shell:
    prompt>> kill -<Signal or Signo> <process_pid> 
 */
 
-static void sig_int(int signo) {
-  printf("caught SIGINT\n");
-  exit(0);
-}
-
-static void sig_tstp(int signo) {
-	printf("caught SIGTSTP\n");
-}
+#include <string.h>
 
 static void sig_handler(int signo) {
   switch(signo){
@@ -58,8 +52,6 @@ static void sig_handler(int signo) {
   }
 	
 }
-
-
 
 int main(void) {
 // You can register separate signal handlers like here:
@@ -75,5 +67,11 @@ int main(void) {
   if (signal(SIGTSTP, sig_handler) == SIG_ERR)
     printf("signal(SIGTSTP) error");
   
-  while(1){}
+  while(1){
+    char buffer[2000];
+    fgets(buffer, 2000, stdin);
+    buffer[strlen(buffer) - 1] = '\0';
+
+    printf("%s", buffer);
+  }
 }

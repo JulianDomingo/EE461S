@@ -7,12 +7,12 @@
  */
 #include "process_group.h"
 
-typedef struct bg_jobs_linked_list_t {
+typedef struct bg_jobs_stack_t {
     size_t size;
     struct process_group_t *head;
     struct process_group_t *next;
-} bg_jobs_linked_list_t;
+} bg_jobs_stack_t; 
 
-struct bg_jobs_linked_list_t head; 
+struct bg_jobs_stack_t head; 
 
 #endif

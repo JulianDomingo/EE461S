@@ -3,6 +3,8 @@
  * UT EID: jad5348
  */
 
+#include <stdio.h>
+#include <stdlib.h>
 #include <stdbool.h>
 #include <ctype.h>
 #include <string.h>
@@ -11,6 +13,7 @@
 
 #include "parse.h"
 #include "yash.h"
+#include "process_group.h"
 
 #define MAX_CHARACTER_LIMIT = 2000;
 
@@ -21,39 +24,48 @@
 bool parse_input(char *shell_input, yash_t *yash) {
     char *trimmed_shell_input = trim(shell_input);     
 
-    int length = strlen(shell_input);
+    struct process_group_t *process_group = malloc(sizeof(process_group_t)); 
+    initialize_process_group(process_group, shell_input);
 
     char **command;
     const char delimiter[2]= " ";
     char *token;
 
+    // retrieve the first token with input string separately to startup tokenizer 
     token = strtok(shell_input, delimiter);
 
     while (token != NULL) {
-        switch (token) {
-            case "|":
-                // Reached end of a command
-                                 
-                break;
-            
-            case "<":
-                // STDIN
-                break;
-
-            case ">":
-                // STDOUT
-                break;
-
-            case "2>":
-                // STDERR
-                break;
-
-            default:
-                // Either command name or flag 
-    
-                break;
+        if (strcmp(token, "fg") == 0) {
+            if (yash->fg_job) {
+                    
+            }
         }
+        else if (strcmp(token, "bg") == 0) {
 
+        }
+        else if (strcmp(token, "jobs") == 0) {
+
+        }
+        else if (strcmp(token, "|") == 0) {
+        
+        }
+        else if (strcmp(token, "<") == 0) {
+
+        }
+        else if (strcmp(token, ">") == 0) {
+
+        }
+        else if (strcmp(token, "2>") == 0) {
+
+        }
+        else if (strcmp(token, "&") == 0) {
+            // insert the process group into bg job stack
+            
+        }
+        else {
+            // Either command name or flag 
+
+        }
 
         // retrieve next token
         token = strtok(NULL, delimiter);
@@ -63,34 +75,34 @@ bool parse_input(char *shell_input, yash_t *yash) {
 /*
  * Trims all leading and trailing whitespace from the string.
  */
-char *trim(char *untrimmed) {
+char *trim(char *string) {
     char *end;
    
     // remove leading whitespace
-    while (isspace((unsigned char) *untrimmed)) {
-        untrimmed++;
+    while (isspace((unsigned char) *string)) {
+        string++;
     }
 
     // the string is all spaces.
-    if (*untrimmed == 0) { return untrimmed; }
+    if (*string == 0) { return string; }
 
-    end = str + strlen(str) - 1;
+    end = string + strlen(string) - 1;
    
     // remove trailing whitespace
-    while (end > str && isspace((unsigned char) *end)) {
+    while (end > string && isspace((unsigned char) *end)) {
         end--;
     }
 
     // define new string terminator
     *(end + 1) = '\0';
 
-    printf("Trimmed: %s\n", untrimmed);
-    return untrimmed;
+    return string;
 }
 
 /*
  * Retrieves the the active process group and executes its commmand(s).
  */
 void execute_input(yash_t *yash) {
-    // TODO: Implement
+    process_group_t *active_process_group = yash->active_process_group;
+    // TODO: Implement the logic to execute the commands stored in activate process group 
 } 
