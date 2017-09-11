@@ -1,3 +1,8 @@
+/* 
+ * Name: Julian Domingo
+ * UT EID: jad5348
+ */
+
 extern struct bg_jobs_linked_list_t head; 
 
 typedef struct bg_jobs_linked_list_t {

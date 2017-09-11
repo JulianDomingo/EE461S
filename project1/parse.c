@@ -1,5 +1,11 @@
+/* 
+ * Name: Julian Domingo
+ * UT EID: jad5348
+ */
+
 #include <stdbool.h>
 #include <ctype.h>
+#include <string.h>
 
 #include "parse.h"
 #include "yash.h"
@@ -13,6 +19,43 @@ const int MAX_CHARACTER_LIMIT = 2000;
 static bool parse_input(char **shell_input, yash_t *yash) {
     char *trimmed_shell_input = trim(*shell_input);     
 
+    int length = strlen(*shell_input);
+
+    char **command;
+    const char[2] delimiter = " ";
+    char *token;
+
+    token = strtok(*shell_input, delimiter);
+
+    while (token != NULL) {
+        switch (token) {
+            case "|":
+                // Reached end of a command
+                                 
+                break;
+            
+            case "<":
+                // STDIN
+                break;
+
+            case ">":
+                // STDOUT
+                break;
+
+            case "2>":
+                // STDERR
+                break;
+
+            default:
+                // Either command name or flag 
+    
+                break;
+        }
+
+
+        // retrieve next token
+        token = strtok(NULL, delimiter);
+    }
 } 
 
 /*
@@ -41,3 +84,10 @@ static char *trim(char *untrimmed) {
 
     return untrimmed;
 }
+
+/*
+ * Retrieves the the active process group and executes its commmand(s).
+ */
+static void execute_input(yash_t *yash) {
+
+} 

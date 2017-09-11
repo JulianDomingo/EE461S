@@ -1,3 +1,8 @@
+/* 
+ * Name: Julian Domingo
+ * UT EID: jad5348
+ */
+
 #include <stdbool.h>
 
 #include "process_group.h"

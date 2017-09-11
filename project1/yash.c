@@ -78,10 +78,11 @@ int main() {
     show_terminal_prompt = true;
 
     while (true) {
+        // TODO: Figure out when to not show terminal prompt based on signal / command given to parent process
         if (show_terminal_prompt) {
             printf("%s", "# ");
         }
-   
+    
         // Handle signal interruptions first
         process_group_t fg_job = yash.fg_job; 
 
@@ -107,7 +108,6 @@ int main() {
                     // reap zombie process
                     destroy_process_group(&fg_job); 
                 }
-                printf()
                 signal_from_child_process = 0;
                 break;
            
