@@ -48,7 +48,7 @@ int main() {
     yash.process_id = getpid();
     yash.active_process_group = NULL;
     yash.fg_job = NULL;
-    yash.bg_jobs_stack = malloc(sizeof(head));
+    yash.bg_jobs_stack = malloc(sizeof(bg_jobs_stack_t));
 
     // initialize sigaction struct
     struct sigaction sa; 
@@ -92,7 +92,7 @@ int main() {
                 if (foreground_job) {
                     // Send SIGTSTP to the foreground job 
                     killpg(foreground_job->process_group_id, SIGTSTP); 
-                    // TODO: Move the foreground job to background
+                    move_fg_job_to_bg(&yash);
                 }
                 fputc('\n', stdout);
                 signal_from_child_process = 0;
@@ -100,8 +100,8 @@ int main() {
             
             case SIGCHLD:
                 if (foreground_job) {
-                    // TODO: recognize child process has terminated by removing the foreground job
-                    // from the yash session 
+                    destroy_process_group(yash->fg_job);
+                    yash->fg_job = NULL;
                 }
                 signal_from_child_process = 0;
                 break;

@@ -6,17 +6,18 @@
  * UT EID: jad5348
  */
 
-#include <stdbool.h>
+enum status {RUNNING, STOPPED, INITIALIZING}; 
 
 typedef struct process_group_t {
     pid_t process_group_id;
-    int number_of_commands;
     char *command_entered;
     char **commands;
+    size_t command_size;
+    enum status;  
 } process_group_t;
 
 void initialize_process_group(process_group_t *process_group, char *command_string);
-void destroy_process_group(process_group_t *process_group, bool is_foreground_job);
+void destroy_process_group(process_group_t *process_group); 
 void allocate_new_command(process_group_t *process_group, char *command);
 
 #endif
