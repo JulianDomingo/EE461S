@@ -92,7 +92,7 @@ int main() {
                 if (foreground_job) {
                     // Send SIGTSTP to the foreground job 
                     killpg(foreground_job->process_group_id, SIGTSTP); 
-                    move_fg_job_to_bg(&yash);
+                    move_job_to_bg(foreground_job, yash.bg_jobs_stack);
                 }
                 fputc('\n', stdout);
                 signal_from_child_process = 0;
@@ -100,8 +100,9 @@ int main() {
             
             case SIGCHLD:
                 if (foreground_job) {
-                    destroy_process_group(yash->fg_job);
-                    yash->fg_job = NULL;
+                    // Reap zombie process
+                    destroy_process_group(foreground_job);
+                    yash.fg_job = NULL;
                 }
                 signal_from_child_process = 0;
                 break;

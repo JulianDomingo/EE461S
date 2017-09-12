@@ -6,6 +6,9 @@
  * UT EID: jad5348
  */
 
+#include <unistd.h>
+#include <sys/types.h>
+
 enum status {RUNNING, STOPPED, INITIALIZING}; 
 
 typedef struct process_group_t {
@@ -13,7 +16,7 @@ typedef struct process_group_t {
     char *command_entered;
     char **commands;
     size_t command_size;
-    enum status;  
+    enum status process_status; 
 } process_group_t;
 
 void initialize_process_group(process_group_t *process_group, char *command_string);

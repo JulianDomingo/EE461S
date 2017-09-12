@@ -11,13 +11,13 @@
 #include "bg_jobs.h"
 #include "process_group.h"
 
-extern int status;
-extern int pipefd[2];
-extern char **parsed_input;
-extern bool show_terminal_prompt;
-extern pid_t process_group_id;
-extern pid_t pid_child1;
-extern pid_t pid_child2;
+int status;
+int pipefd[2];
+char **parsed_input;
+bool show_terminal_prompt;
+pid_t process_group_id;
+pid_t pid_child1;
+pid_t pid_child2;
 
 typedef struct yash_t {
     pid_t process_id;
