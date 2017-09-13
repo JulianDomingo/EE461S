@@ -3,10 +3,11 @@
  * UT EID: jad5348
  */
 
-#include <stdlib.h>
-
-#include "process_group.h"
 #include "bg_jobs.h"
+#include "process_group.h"
+
+#include <stdbool.h>
+#include <stdlib.h>
 
 /*
  * Removes the specified process group from the background jobs stack.
@@ -15,27 +16,36 @@
 void remove_stack_node(process_group_t *process_group_to_remove, bg_jobs_stack_t *stack) {
     if (stack->size == 0) { return; }
 
-    if (process_group_to_remove == stack->head->process_group) {
-        // First free the heap-stored members of the process group before freeing the stack node itself.
-        destroy_process_group(stack->head->process_group);
-        free(stack->head);
-        stack->head->process_group = stack->head->process_group->next;    
+    bg_jobs_stack_node_t *stack_node_to_destroy;
+
+    // Process group to remove is the most recent background job
+    if (process_group_to_remove == stack->pointer_to_head->next->process_group) {
+        // Save the pointer to the node to destroy before rerouting pointers.
+        stack_node_to_destroy = stack->pointer_to_head->next;
+
+        // Remove any pointers to the node to destroy.
+        stack->pointer_to_head->next = stack->pointer_to_head->next->next;
+        stack->pointer_to_head->next->next->previous = stack->pointer_to_head;
+
+        // First free the heap-stored members of process group before freeing stack node itself.
+        destroy_process_group(stack_node_to_destroy->process_group);
+        free(stack_node_to_destroy); 
     }
     else {
-        bg_jobs_stack_node_t *runner = stack->head;
-        while (runner->next != NULL) {
+        // Process group to remove is not the most recent background job
+        bg_jobs_stack_node_t *runner = stack->pointer_to_head->next;
+        while (!runner->is_head_or_tail) {
             if (runner->process_group == process_group_to_remove) {
-                // Re-route pointers
-                destroy_process_group(runner->process_group);
-                runner->previous->next = runner->next;
+                // Save the pointer to the node to destroy before rerouting pointers.
+                stack_node_to_destroy = runner;
+
+                // Remove any pointers to the node to destroy.
+                runner->previous->next = runner->next; 
                 runner->next->previous = runner->previous;
 
-                // Nullify unused pointers.
-                runner->previous = NULL;
-                runner->next = NULL;
-
-                // Deallocate space on heap for removed stack node. 
-                free(runner);
+                // First free the heap-stored members of process group before freeing stack node itself.
+                destroy_process_group(stack_node_to_destroy->process_group);
+                free(stack_node_to_destroy); 
             }
 
             runner = runner->next;
@@ -51,41 +61,33 @@ bg_jobs_stack_node_t *create_stack_node(process_group_t *process_group) {
     stack_node->process_group = process_group;
     stack_node->next = NULL;
     stack_node->previous = NULL;
+    stack_node->is_head_or_tail = false;
     return stack_node;
 }
 
 /*
  * Moves the foreground job to the background then clears the old, duplicate entry.
+ * The new process group is inserted from the front of the list.
  */
 void move_job_to_bg(process_group_t *process_group, bg_jobs_stack_t *stack)  {
     process_group->process_status = STOPPED;
 
     bg_jobs_stack_node_t *new_node = create_stack_node(process_group);
 
-    if (stack->head) {
-        // Head process becomes second most recent
-        new_node->next = stack->head;
-        stack->head->previous = new_node;
+    if (stack->pointer_to_head->next) {
+        // Stack is not empty
+        new_node->next = stack->pointer_to_head->next;
+        stack->pointer_to_head->next->previous = new_node;
     }
-    
-    stack->head = new_node;
+    else {
+        // First node in stack
+        stack->pointer_to_tail->previous = new_node;  
+        new_node->next = stack->pointer_to_tail;
+    }    
+
+    // These pointer re-routes must always happen regardless of the stack size. 
+    new_node->previous = stack->pointer_to_head;
+    stack->pointer_to_head->next = new_node;
     
     stack->size++;
 }
-
-/*
- * Moves the most recently inserted job in the background to the foreground.
- * If no background job exists, prints the indication to STDOUT as does bash. 
- */
-void move_job_to_fg(yash_t *yash) {
-    if (yash->fg_job) {
-        bg_jobs_stack_node_t *most_recent_job    
-                
-
-
-
-    } 
-    else {
-        printf("fg: no current job");
-    }
-} 

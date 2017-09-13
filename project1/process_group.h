@@ -6,8 +6,8 @@
  * UT EID: jad5348
  */
 
-#include <unistd.h>
 #include <sys/types.h>
+#include <unistd.h>
 
 enum status {RUNNING, STOPPED, INITIALIZING}; 
 

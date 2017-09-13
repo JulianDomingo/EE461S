@@ -3,6 +3,11 @@
  * UT EID: jad5348
  */
 
+#include "bg_jobs.h"
+#include "parse.h"
+#include "process_group.h"
+#include "yash.h"
+
 #include <signal.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -12,16 +17,24 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-#include "parse.h"
-#include "process_group.h"
-#include "bg_jobs.h"
-#include "yash.h"
-
 int status;
 int pipefd[2];
 char **parsed_input;
 bool show_terminal_prompt;
 volatile sig_atomic_t signal_from_child_process;
+
+/*
+ * Moves the most recently inserted job in the background to the foreground.
+ */
+void move_job_to_fg(yash_t *yash) {
+    if (yash->bg_jobs_stack->pointer_to_head->next) {
+        // Move the background job at the top of the stack to the foreground.
+        process_group_t *most_recent_process_group_in_bg = yash->bg_jobs_stack->pointer_to_head->next->process_group; 
+        remove_stack_node(most_recent_process_group_in_bg, yash->bg_jobs_stack); 
+
+        yash->fg_job = most_recent_process_group_in_bg;
+    } 
+} 
 
 /*
  * Handler for needed signals to implement.  
@@ -49,6 +62,10 @@ int main() {
     yash.active_process_group = NULL;
     yash.fg_job = NULL;
     yash.bg_jobs_stack = malloc(sizeof(bg_jobs_stack_t));
+    yash.bg_jobs_stack->pointer_to_head = malloc(sizeof(bg_jobs_stack_node_t));
+    yash.bg_jobs_stack->pointer_to_tail = malloc(sizeof(bg_jobs_stack_node_t));
+    yash.bg_jobs_stack->pointer_to_head->is_head_or_tail = true;
+    yash.bg_jobs_stack->pointer_to_tail->is_head_or_tail = true;
 
     // initialize sigaction struct
     struct sigaction sa; 
@@ -100,7 +117,6 @@ int main() {
             
             case SIGCHLD:
                 if (foreground_job) {
-                    // Reap zombie process
                     destroy_process_group(foreground_job);
                     yash.fg_job = NULL;
                 }

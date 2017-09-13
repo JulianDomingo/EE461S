@@ -3,14 +3,14 @@
  * UT EID: jad5348
  */
 
+#include "process_group.h"
+
+#include <stdbool.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdbool.h>
-#include <unistd.h>
 #include <sys/types.h>
-#include <stdio.h>
-
-#include "process_group.h"
+#include <unistd.h>
 
 static const int max_commands_limit = 2;
 

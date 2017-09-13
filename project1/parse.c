@@ -3,28 +3,33 @@
  * UT EID: jad5348
  */
 
+#include "parse.h"
+#include "process_group.h"
+#include "yash.h"
+
+#include <ctype.h>
+#include <signal.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdbool.h>
-#include <ctype.h>
 #include <string.h>
-#include <unistd.h>
 #include <sys/types.h>
-
-#include "parse.h"
-#include "yash.h"
-#include "process_group.h"
+#include <sys/wait.h>
+#include <unistd.h>
 
 #define MAX_CHARACTER_LIMIT = 2000;
 
 /*
  * Parses the input read from STDIN, 
  * dependent on the content of the command given.
+ * Returns:
+ *      true if yash should fork after parsing of the shell input. 
+ *      false if yash should NOT fork after parsing of the shell input (i.e. job control commands). 
  */
 bool parse_input(char *shell_input, yash_t *yash) {
     char *trimmed_shell_input = trim(shell_input);     
 
-    struct process_group_t *process_group = malloc(sizeof(process_group_t)); 
+    process_group_t *process_group = malloc(sizeof(process_group_t)); 
     initialize_process_group(process_group, shell_input);
 
     char **command;
@@ -35,16 +40,72 @@ bool parse_input(char *shell_input, yash_t *yash) {
     token = strtok(shell_input, delimiter);
 
     while (token != NULL) {
-        if (strcmp(token, "fg") == 0) {
-            if (yash->fg_job) {
-                    
+        if (strcmp(token, "fg") == 0 ||
+            strcmp(token, "bg") == 0 ||
+            strcmp(token, "jobs") == 0)
+        {
+            // Job control commands are dealt with using our own implementation. Therefore, no fork is necessary after this method. 
+            destroy_process_group(process_group); 
+            free(process_group);
+           
+            // status for waitpid
+            int status;
+
+            if (strcmp(token, "fg") == 0) {
+                process_group_t *most_recent_process_group_in_bg = yash->bg_jobs_stack->pointer_to_head->next->process_group;
+               
+                if (!most_recent_process_group_in_bg) {
+                    printf("yash: fg: current: no such job");
+                }
+                else {
+                    killpg(most_recent_process_group_in_bg->process_group_id, SIGCONT);
+                    printf("%s\n", most_recent_process_group_in_bg->command_entered);
+                    move_job_to_fg(yash);
+                    most_recent_process_group_in_bg->process_status = RUNNING;
+
+                    // Wait for completion of the process, indicated by the "0" argument.
+                    waitpid(most_recent_process_group_in_bg->process_group_id, &status, 0);
+                }
             }
-        }
-        else if (strcmp(token, "bg") == 0) {
+            else if (strcmp(token, "bg") == 0) {
+                process_group_t *most_recent_process_group_in_bg = yash->bg_jobs_stack->pointer_to_head->next->process_group;
 
-        }
-        else if (strcmp(token, "jobs") == 0) {
+                if (!most_recent_process_group_in_bg) {
+                    printf("yash: bg: current: no such job");
+                }
+                else if (most_recent_process_group_in_bg->process_status == RUNNING) {
+                    printf("yash: bg: job already running in background"); 
+                }
+                else {
+                    killpg(most_recent_process_group_in_bg->process_group_id, SIGCONT);
+                    most_recent_process_group_in_bg->process_status = RUNNING;
+                    printf("[%d] + Running    %s\n", yash->bg_jobs_stack->size, most_recent_process_group_in_bg->command_entered);
 
+                    // Do NOT wait for completion (as if '&'), indicated by the "WNOHANG" argument. 
+                    waitpid(most_recent_process_group_in_bg->process_group_id, &status, WNOHANG);
+                }    
+            }
+            else {
+                // "jobs" command. As per bash, this command outputs nothing if no jobs exist. 
+                if (yash->bg_jobs_stack->size > 0) {
+                    bg_jobs_stack_node_t *runner = yash->bg_jobs_stack->pointer_to_tail;
+
+                    int job_number = 1; 
+      
+                    while (runner && !runner->is_head_or_tail) {
+                        printf("[%d] %s %s    %s\n", 
+                                job_number, 
+                                (runner->previous) ? "+" : "-",  
+                                (runner->process_group->process_status == RUNNING) ? "Running" : "Stopped",
+                                runner->process_group->command_entered);
+
+                        job_number++;
+                    }
+                }    
+            }
+
+            // Do not fork after this function and immediately continue to the next input 
+            return false;
         }
         else if (strcmp(token, "|") == 0) {
         

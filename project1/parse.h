@@ -6,9 +6,9 @@
  * UT EID: jad5348
  */
 
-#include <stdbool.h>
-
 #include "yash.h"
+
+#include <stdbool.h>
 
 static const int MAX_CHARACTER_LIMIT = 2000;
 
