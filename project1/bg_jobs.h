@@ -24,9 +24,10 @@ typedef struct bg_jobs_stack_t {
     struct bg_jobs_stack_node_t *pointer_to_tail;
 } bg_jobs_stack_t; 
 
-struct bg_jobs_stack_t stack;
+extern struct bg_jobs_stack_t stack;
 
 bg_jobs_stack_node_t *create_stack_node(process_group_t *process_group);
 void remove_stack_node(process_group_t *process_group_to_remove, bg_jobs_stack_t *stack);
+void initialize_bg_jobs_stack(bg_jobs_stack_t *stack);
 
 #endif

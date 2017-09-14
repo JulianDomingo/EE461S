@@ -25,6 +25,9 @@
  * Returns:
  *      true if yash should fork after parsing of the shell input. 
  *      false if yash should NOT fork after parsing of the shell input (i.e. job control commands). 
+ *
+ * NOTE: This lab requires handling of ONE kind of invalid input, which is the only invalid
+ * input checked for: non-existent redirect files.
  */
 bool parse_input(char *shell_input, yash_shell_t *yash) {
     char *trimmed_shell_input = trim(shell_input);     
@@ -108,10 +111,20 @@ bool parse_input(char *shell_input, yash_shell_t *yash) {
             return false;
         }
         else if (strcmp(token, "|") == 0) {
-        
+
         }
         else if (strcmp(token, "<") == 0) {
-
+            char *redirect_stdin_filename = strtok(NULL, delimiter);
+    
+            FILE *file;    
+            
+            // Check that the file exists.
+            if (fopen(redirect_stdin_filename, "r")) {
+                 
+            }
+            else {
+                printf("yash: %s: No such file or directory\n", redirect_stdin_filename); 
+            }
         }
         else if (strcmp(token, ">") == 0) {
 
@@ -127,9 +140,6 @@ bool parse_input(char *shell_input, yash_shell_t *yash) {
             // Either command name or flag 
 
         }
-
-        // retrieve next token
-        token = strtok(NULL, delimiter);
     }
 } 
 

@@ -51,12 +51,12 @@ int main() {
     yash.active_process_group = NULL;
     yash.fg_job = NULL;
     yash.bg_jobs_stack = malloc(sizeof(bg_jobs_stack_t));
-    yash.bg_jobs_stack->pointer_to_head = malloc(sizeof(bg_jobs_stack_node_t));
-    yash.bg_jobs_stack->pointer_to_tail = malloc(sizeof(bg_jobs_stack_node_t));
-    yash.bg_jobs_stack->pointer_to_head->is_head_or_tail = true;
-    yash.bg_jobs_stack->pointer_to_tail->is_head_or_tail = true;
+    initialize_bg_jobs_stack(yash.bg_jobs_stack);
 
-    // initialize sigaction struct
+    /*
+     * initialize sigaction struct: 
+     *      http://pubs.opengroup.org/onlinepubs/009695399/functions/sigaction.html
+     */
     struct sigaction sa; 
     sa.sa_handler = sig_handler;
     sigemptyset(&sa.sa_mask);

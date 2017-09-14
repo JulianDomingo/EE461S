@@ -8,10 +8,10 @@
 
 #include <stdbool.h>
 
-int status;
-int pipefd[2];
-char **parsed_input;
-bool show_terminal_prompt;
+extern int status;
+extern int pipefd[2];
+extern char **parsed_input;
+extern bool show_terminal_prompt;
 
 static void sig_handler(int signum);
 

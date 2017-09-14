@@ -9,12 +9,13 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include "command.h"
+
 enum status {RUNNING, STOPPED, INITIALIZING}; 
 
 typedef struct process_group_t {
     pid_t process_group_id;
-    char *command_entered;
-    char **commands;
+    struct command_t *commands; 
     size_t command_size;
     enum status process_status; 
 } process_group_t;
