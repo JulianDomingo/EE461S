@@ -3,10 +3,12 @@
  * UT EID: jad5348
  */
 
+#include "execute.h"
 #include "bg_jobs.h"
 #include "parse.h"
 #include "process_group.h"
 #include "yash.h"
+#include "yash_shell.h"
 
 #include <signal.h>
 #include <stdbool.h>
@@ -22,19 +24,6 @@ int pipefd[2];
 char **parsed_input;
 bool show_terminal_prompt;
 volatile sig_atomic_t signal_from_child_process;
-
-/*
- * Moves the most recently inserted job in the background to the foreground.
- */
-void move_job_to_fg(yash_t *yash) {
-    if (yash->bg_jobs_stack->pointer_to_head->next) {
-        // Move the background job at the top of the stack to the foreground.
-        process_group_t *most_recent_process_group_in_bg = yash->bg_jobs_stack->pointer_to_head->next->process_group; 
-        remove_stack_node(most_recent_process_group_in_bg, yash->bg_jobs_stack); 
-
-        yash->fg_job = most_recent_process_group_in_bg;
-    } 
-} 
 
 /*
  * Handler for needed signals to implement.  
@@ -57,7 +46,7 @@ int main() {
     char shell_input[MAX_CHARACTER_LIMIT];
 
     // initialize yash shell
-    struct yash_t yash;
+    struct yash_shell_t yash;
     yash.process_id = getpid();
     yash.active_process_group = NULL;
     yash.fg_job = NULL;

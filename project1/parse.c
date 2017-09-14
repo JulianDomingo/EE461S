@@ -5,7 +5,7 @@
 
 #include "parse.h"
 #include "process_group.h"
-#include "yash.h"
+#include "yash_shell.h"
 
 #include <ctype.h>
 #include <signal.h>
@@ -26,7 +26,7 @@
  *      true if yash should fork after parsing of the shell input. 
  *      false if yash should NOT fork after parsing of the shell input (i.e. job control commands). 
  */
-bool parse_input(char *shell_input, yash_t *yash) {
+bool parse_input(char *shell_input, yash_shell_t *yash) {
     char *trimmed_shell_input = trim(shell_input);     
 
     process_group_t *process_group = malloc(sizeof(process_group_t)); 
@@ -160,10 +160,3 @@ char *trim(char *string) {
     return string;
 }
 
-/*
- * Retrieves the the active process group and executes its commmand(s).
- */
-void execute_input(yash_t *yash) {
-    process_group_t *active_process_group = yash->active_process_group;
-    // TODO: Implement the logic to execute the commands stored in activate process group 
-} 

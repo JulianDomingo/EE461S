@@ -64,30 +64,3 @@ bg_jobs_stack_node_t *create_stack_node(process_group_t *process_group) {
     stack_node->is_head_or_tail = false;
     return stack_node;
 }
-
-/*
- * Moves the foreground job to the background then clears the old, duplicate entry.
- * The new process group is inserted from the front of the list.
- */
-void move_job_to_bg(process_group_t *process_group, bg_jobs_stack_t *stack)  {
-    process_group->process_status = STOPPED;
-
-    bg_jobs_stack_node_t *new_node = create_stack_node(process_group);
-
-    if (stack->pointer_to_head->next) {
-        // Stack is not empty
-        new_node->next = stack->pointer_to_head->next;
-        stack->pointer_to_head->next->previous = new_node;
-    }
-    else {
-        // First node in stack
-        stack->pointer_to_tail->previous = new_node;  
-        new_node->next = stack->pointer_to_tail;
-    }    
-
-    // These pointer re-routes must always happen regardless of the stack size. 
-    new_node->previous = stack->pointer_to_head;
-    stack->pointer_to_head->next = new_node;
-    
-    stack->size++;
-}
