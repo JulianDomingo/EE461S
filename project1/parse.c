@@ -6,6 +6,7 @@
 #include "parse.h"
 #include "process_group.h"
 #include "yash_shell.h"
+#include "command.h"
 
 #include <ctype.h>
 #include <signal.h>
@@ -16,8 +17,6 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
-
-#define MAX_CHARACTER_LIMIT = 2000;
 
 /*
  * Parses the input read from STDIN, 
@@ -35,7 +34,8 @@ bool parse_input(char *shell_input, yash_shell_t *yash) {
     process_group_t *process_group = malloc(sizeof(process_group_t)); 
     initialize_process_group(process_group, shell_input);
 
-    char **command;
+    command_t *new_command = create_command();
+
     const char delimiter[2]= " ";
     char *token;
 
@@ -48,6 +48,7 @@ bool parse_input(char *shell_input, yash_shell_t *yash) {
             strcmp(token, "jobs") == 0)
         {
             // Job control commands are dealt with using our own implementation. Therefore, no fork is necessary after this method. 
+            destroy_command(new_command);
             destroy_process_group(process_group); 
             free(process_group);
            
@@ -62,7 +63,7 @@ bool parse_input(char *shell_input, yash_shell_t *yash) {
                 }
                 else {
                     killpg(most_recent_process_group_in_bg->process_group_id, SIGCONT);
-                    printf("%s\n", most_recent_process_group_in_bg->command_entered);
+                    printf("%s\n", most_recent_process_group_in_bg->full_command);
                     move_job_to_fg(yash);
                     most_recent_process_group_in_bg->process_status = RUNNING;
 
@@ -82,7 +83,7 @@ bool parse_input(char *shell_input, yash_shell_t *yash) {
                 else {
                     killpg(most_recent_process_group_in_bg->process_group_id, SIGCONT);
                     most_recent_process_group_in_bg->process_status = RUNNING;
-                    printf("[%d] + Running    %s\n", yash->bg_jobs_stack->size, most_recent_process_group_in_bg->command_entered);
+                    printf("[%d] + Running    %s\n", yash->bg_jobs_stack->size, most_recent_process_group_in_bg->full_command);
 
                     // Do NOT wait for completion (as if '&'), indicated by the "WNOHANG" argument. 
                     waitpid(most_recent_process_group_in_bg->process_group_id, &status, WNOHANG);
@@ -100,7 +101,7 @@ bool parse_input(char *shell_input, yash_shell_t *yash) {
                                 job_number, 
                                 (runner->previous) ? "+" : "-",  
                                 (runner->process_group->process_status == RUNNING) ? "Running" : "Stopped",
-                                runner->process_group->command_entered);
+                                runner->process_group->full_command);
 
                         job_number++;
                     }
@@ -111,34 +112,63 @@ bool parse_input(char *shell_input, yash_shell_t *yash) {
             return false;
         }
         else if (strcmp(token, "|") == 0) {
+            // Guaranteed the command is finished, so add (excluding the pipe) to the current process group.            
+            process_group->commands[process_group->commands_size] = new_command; 
+            process_group->commands_size++;
 
+            // Point to a new heap-allocated command.
+            new_command = create_command();
+
+            // Fetch the next token
+            token = strtok(NULL, delimiter);
         }
         else if (strcmp(token, "<") == 0) {
-            char *redirect_stdin_filename = strtok(NULL, delimiter);
+            // Retrieve file name.
+            token = strtok(NULL, delimiter);
     
-            FILE *file;    
+            FILE *file_pointer = fopen(token, "r"); 
             
             // Check that the file exists.
-            if (fopen(redirect_stdin_filename, "r")) {
-                 
+            if (file_pointer) {
+                new_command->redirect_stdin_filename = strdup(token);
+                new_command->contains_redirect_stdin = true;
+                fclose(file_pointer);
             }
             else {
-                printf("yash: %s: No such file or directory\n", redirect_stdin_filename); 
+                fclose(file_pointer);
+                printf("yash: %s: No such file or directory\n", token); 
+                
+                destroy_command(new_command);
+                destroy_process_group(process_group); 
+                free(process_group);
+                
+                return false;
             }
         }
         else if (strcmp(token, ">") == 0) {
-
+            // Retrieve file name.
+            token = strtok(NULL, delimiter);
+            new_command->redirect_stdout_filename = strdup(token);
+            new_command->contains_redirect_stdout = true;
         }
         else if (strcmp(token, "2>") == 0) {
-
+            // Retrieve file name.
+            token = strtok(NULL, delimiter);
+            new_command->redirect_stderr_filename = strdup(token);
+            new_command->contains_redirect_stderr = true;
         }
         else if (strcmp(token, "&") == 0) {
-            // insert the process group into bg job stack
-            
+            process_group->is_foreground_job = false; 
+            process_group->commands[process_group->commands_size] = new_command; 
+            process_group->commands_size++;
+
+            // Can pre-emptively return since the '&' token will always be the last in a given input.
+            return true;
         }
         else {
-            // Either command name or flag 
-
+            // Token is either a command name or command argument; add normally to the command_t variable. 
+            add_argument_to_command(process_group->commands[process_group->commands_size], token); 
+            token = strtok(NULL, delimiter);
         }
     }
 } 

@@ -13,11 +13,12 @@ typedef struct command_t {
     char *redirect_stderr_filename;
 
     // Command information 
-    char *full_command;
-    char *whitespace_tokenized_command; 
-    int number_of_command_tokens;
+    char **whitespace_tokenized_command; 
+    size_t whitespace_tokenized_command_size; 
 } command_t;
 
+command_t *create_command();
 void destroy_command(command_t *command); 
+void add_argument_to_command(command_t *command, char *argument);
 
 #endif

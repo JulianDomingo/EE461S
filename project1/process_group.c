@@ -4,6 +4,7 @@
  */
 
 #include "process_group.h"
+#include "command.h"
 
 #include <stdbool.h>
 #include <stdio.h>
@@ -17,27 +18,31 @@ static const int max_commands_limit = 2;
 void destroy_process_group(process_group_t *process_group) {
     // free command strings
     for (int command = 0; command < max_commands_limit; command++) {
-        free(process_group->commands[command]);
+        destroy_command(process_group->commands[command]); 
     } 
 
     // free command holder 
     free(process_group->commands);
 
     // free full command name 
-    free(process_group->command_entered);
+    free(process_group->full_command);
 }
 
-void initialize_process_group(process_group_t *process_group, char *command_entered) {
-    process_group->command_entered = strdup(command_entered);
+void initialize_process_group(process_group_t *process_group, char *full_command) {
+    process_group->full_command = strdup(full_command);
     process_group->commands = malloc(sizeof(char *) * max_commands_limit); 
     process_group->process_status = INITIALIZING; 
 }
 
-void allocate_new_command(process_group_t *process_group, char *command) {
-    if (process_group->command_size == 2) {
+/*
+ * Inserts a new command to the passed process group. 
+ */
+void allocate_new_command(process_group_t *process_group, command_t *command) {
+    if (process_group->commands_size == 2) {
         perror("command capacity exceeded");
         exit(EXIT_FAILURE);
     }
-    process_group->commands[process_group->command_size] = strdup(command); 
-    process_group->command_size++;
+
+    process_group->commands[process_group->commands_size] = command; 
+    process_group->commands_size++;
 }

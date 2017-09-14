@@ -130,8 +130,7 @@ int main() {
             continue;
         }
         else {
-            // retrieve command(s) and execute them
-            /*parse_input(&shell_input, &yash);*/
+            parse_input(shell_input, &yash);
             /*execute_input(&yash);*/
         }
     }
