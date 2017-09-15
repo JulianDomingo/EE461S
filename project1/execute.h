@@ -11,6 +11,6 @@
 #include "yash_shell.h"
 
 void execute_input(yash_shell_t *yash); 
-void execute_command(command_t *command, process_group_t *process_group_of_command); 
+void execute_command(command_t *command, process_group_t *process_group_of_command, int *pipefd); 
 
 #endif

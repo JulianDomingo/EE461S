@@ -1,5 +1,8 @@
-all: yash.c
-	gcc -o yash bg_jobs.c command.c execute.c parse.c process_group.c yash.c yash_shell.c
+all: build
+
+build:
+	gcc -o yash *.c
 
 clean:
-	$(RM) yash
+	rm -rf *.o yash
+

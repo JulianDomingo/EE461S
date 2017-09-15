@@ -39,6 +39,8 @@ static void sig_handler(int signum) {
         case SIGCHLD:
             signal_from_child_process = SIGCHLD;
             break;
+        default:
+            break;
     }
 }
 
@@ -53,24 +55,15 @@ int main() {
     yash.bg_jobs_stack = malloc(sizeof(bg_jobs_stack_t));
     initialize_bg_jobs_stack(yash.bg_jobs_stack);
 
-    /*
-     * initialize sigaction struct: 
-     *      http://pubs.opengroup.org/onlinepubs/009695399/functions/sigaction.html
-     */
-    struct sigaction sa; 
-    sa.sa_handler = sig_handler;
-    sigemptyset(&sa.sa_mask);
-
-    // Handles signal errors 
-    if (sigaction(SIGINT, &sa, NULL) == -1) { 
+    if (signal(SIGINT, sig_handler) == SIG_ERR) {
         printf("signal(SIGINT) error");
-    } 
-    if (sigaction(SIGTSTP, &sa, NULL) == -1) {
+    }
+    if (signal(SIGTSTP, sig_handler) == SIG_ERR) {
         printf("signal(SIGTSTP) error");
     }
-    if (sigaction(SIGCHLD, &sa, NULL) == -1) {
+    if (signal(SIGCHLD, sig_handler) == SIG_ERR) {
         printf("signal(SIGCHLD) error");
-    } 
+    }
 
     // Handles pipe error
     if (pipe(pipefd) == -1) {
@@ -81,8 +74,14 @@ int main() {
     show_terminal_prompt = true;
 
     while (true) {
+        if (show_terminal_prompt) {
+            printf("%s", "# ");
+        }
+        
         // Handle signal interruptions first
         process_group_t *foreground_job = yash.fg_job; 
+
+        bool is_signal_input = false;
 
         switch (signal_from_child_process) {
             case SIGINT:
@@ -90,8 +89,9 @@ int main() {
                     // Send SIGINT to the foreground job 
                     killpg(foreground_job->process_group_id, SIGINT);
                 }
-                fputc('\n', stdout);
+                // fputc('\n', stdout);
                 signal_from_child_process = 0;
+                is_signal_input = true;
                 break;
 
             case SIGTSTP:
@@ -102,6 +102,7 @@ int main() {
                 }
                 fputc('\n', stdout);
                 signal_from_child_process = 0;
+                is_signal_input = true;
                 break;
             
             case SIGCHLD:
@@ -110,31 +111,35 @@ int main() {
                     yash.fg_job = NULL;
                 }
                 signal_from_child_process = 0;
+                is_signal_input = true;
                 break;
             
             default:
                 // No signal, do nothing 
                 break;
         }
-
-        if (show_terminal_prompt) {
-            printf("%s", "# ");
-        }
         
         // read shell command 
-        fgets(shell_input, MAX_CHARACTER_LIMIT, stdin);
+        char *eof_checker = fgets(shell_input, MAX_CHARACTER_LIMIT, stdin);
+
+        if (!eof_checker) {
+            exit(EXIT_SUCCESS);
+        }
+
         shell_input[strlen(shell_input) - 1] = '\0';
 
-        // check if no command entered
-        if (strlen(trim(shell_input)) == 0) { 
-            continue;
-        }
-        else {
-            bool invoke_execute_input = parse_input(shell_input, &yash);
+        if (!is_signal_input) {
+            // check if no command entered
+            if (strlen(trim(shell_input)) == 0) { 
+                continue;
+            }
+            else {
+                bool invoke_execute_input = parse_input(shell_input, &yash);
 
-            if (invoke_execute_input) {
-                execute_input(&yash);
-            } 
-        }
+                if (invoke_execute_input) {
+                    execute_input(&yash);
+                } 
+            }
+        } 
     }
 }
