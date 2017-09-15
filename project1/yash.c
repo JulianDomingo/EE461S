@@ -46,6 +46,7 @@ static void sig_handler(int signum) {
 
 int main() {    
     char shell_input[MAX_CHARACTER_LIMIT];
+    bool is_signal_input;
 
     // initialize yash shell
     struct yash_shell_t yash;
@@ -81,7 +82,7 @@ int main() {
         // Handle signal interruptions first
         process_group_t *foreground_job = yash.fg_job; 
 
-        bool is_signal_input = false;
+        is_signal_input = false;
 
         switch (signal_from_child_process) {
             case SIGINT:
@@ -111,7 +112,7 @@ int main() {
                     yash.fg_job = NULL;
                 }
                 signal_from_child_process = 0;
-                is_signal_input = true;
+                // Don't set "is_signal_input" to true, because this signal is sent naturally
                 break;
             
             default:
@@ -127,6 +128,8 @@ int main() {
         }
 
         shell_input[strlen(shell_input) - 1] = '\0';
+
+        printf("Checking signal status: %d", is_signal_input);
 
         if (!is_signal_input) {
             // check if no command entered

@@ -16,43 +16,6 @@
 static const int max_commands_limit = 2;
 
 /*
- * Executes the command stored in the command_t variable.
- */
-/*void execute_command(command_t *command, process_group_t *process_group_of_command, int *pipefd) {*/
-    /*int file_descriptor;*/
-
-    /*pid_t child_pid = fork();*/
-
-    /*if (child_pid == 0) {*/
-        /*// Child*/
-        /*setpgid(0, process_group_of_command->process_group_id);        */
-
-        /*// File redirections*/
-        /*if (command->contains_redirect_stdin) {*/
-            /*file_descriptor = open(command->redirect_stdin_filename, O_RDONLY);*/
-            /*dup2(file_descriptor, STDIN_FILENO);*/
-            /*close(file_descriptor);*/
-        /*}*/
-        /*if (command->contains_redirect_stdout) {*/
-            /*file_descriptor = open(command->redirect_stdout_filename, O_RDONLY);*/
-            /*dup2(file_descriptor, STDIN_FILENO);*/
-            /*close(file_descriptor);*/
-        /*}*/
-        /*if (command->contains_redirect_stderr) {*/
-            /*file_descriptor = open(command->redirect_stderr_filename, O_RDONLY);*/
-            /*dup2(file_descriptor, STDIN_FILENO);*/
-            /*close(file_descriptor);*/
-        /*}*/
-
-        /*execvp(command->whitespace_tokenized_command[0], command->whitespace_tokenized_command);*/
-    /*}*/
-    /*else {*/
-        /*// Parent */
-        /*setpgid(child_pid, process_group_of_command->process_group_id); */
-    /*}*/
-/*}*/
-
-/*
  * Handles file redirections for the given command should they exist.
  *
  * 1. Retrieve the file descriptor index for the given file.
@@ -80,6 +43,9 @@ void handle_file_redirections(command_t *command) {
     }
 }
 
+/*
+ * Handles pipelines containing a single command differently from pipeliens with two commands.
+ */
 void handle_single_command(yash_shell_t *yash) {
     int status;
 
@@ -94,7 +60,6 @@ void handle_single_command(yash_shell_t *yash) {
 
         char **command_arguments = command->whitespace_tokenized_command;
         
-        printf("Executing command '%s'\n", command_arguments[0]);
         execvp(command_arguments[0], command_arguments);
     }    
     else {
@@ -113,6 +78,9 @@ void handle_single_command(yash_shell_t *yash) {
 }
 
 
+/*
+ * A second fork() call is needed to create a second child process.
+ */
 void handle_double_commmand(yash_shell_t *yash) {
 
 }
@@ -130,28 +98,6 @@ void execute_input(yash_shell_t *yash) {
         handle_double_commmand(yash);
     }
 
-    // Create the pipe.
-    /*int pipefd[2];  */
-
-    /*pid_t child1_pid = fork();*/
-
-    /*// Contains 2 commands*/
-    /*if (child1_pid == 0) {*/
-        /*// Group leader child (child 1)*/
-        /*setsid();*/
-
-        /*// Close unused read-end.*/
-        /*close(pipefd[0]); */
-
-        /*handle_file_redirections(active_process_group->commands[0]);*/
-
-        /*dup2(pipefd[1], STDOUT_FILENO);*/
-
-        /*// Execute the first command (read from left to right of the input string)*/
-        /*// execute_command(active_process_group->commands[0], active_process_group); */
-        /*char **command_arguments = active_process_group->commands[0]->whitespace_tokenized_command;*/
-        /*execvp(command_arguments[0], command_arguments);*/
-    /*}*/
     /*else {*/
         /*// Parent*/
         /*pid_t child2_pid = fork();*/

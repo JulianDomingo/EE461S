@@ -50,7 +50,6 @@ static void sig_handler(int signo) {
   switch(signo){
   case SIGINT:
 	printf("caught SIGINT\n");
-	exit(0);
 	break;
   case SIGTSTP:
        	printf("caught SIGTSTP\n");
@@ -74,6 +73,14 @@ int main(void) {
     printf("signal(SIGINT) error");
   if (signal(SIGTSTP, sig_handler) == SIG_ERR)
     printf("signal(SIGTSTP) error");
-  
-  while(1){}
+ 
+  char shell_input[2000];
+  while(1){
+      printf("# ");
+      char *line = fgets(shell_input, 2000, stdin);
+      printf("Read input\n");
+      if (!line) {
+          exit(EXIT_SUCCESS);
+      }
+  }
 }

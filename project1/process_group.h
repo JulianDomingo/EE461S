@@ -25,6 +25,6 @@ typedef struct process_group_t {
 
 void initialize_process_group(process_group_t *process_group, char *command_string);
 void destroy_process_group(process_group_t *process_group); 
-void insert_new_command(process_group_t *process_group, command_t *command);
+void add_new_command_to_process_group(process_group_t *process_group, command_t *command);
 
 #endif

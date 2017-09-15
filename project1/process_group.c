@@ -37,7 +37,7 @@ void initialize_process_group(process_group_t *process_group, char *full_command
 /*
  * Inserts a new command to the passed process group. 
  */
-void add_new_command(process_group_t *process_group, command_t *command) {
+void add_new_command_to_process_group(process_group_t *process_group, command_t *command) {
     if (process_group->commands_size == 2) {
         perror("command capacity exceeded");
         exit(EXIT_FAILURE);

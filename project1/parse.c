@@ -180,7 +180,6 @@ bool parse_input(char *shell_input, yash_shell_t *yash) {
             process_group->is_foreground_job = false; 
         }
         else {
-            printf("Adding '%s'\n", token);
             // Token is either a command name or command argument; add normally to the command_t variable. 
             add_argument_to_command(new_command, token); 
         
@@ -192,8 +191,7 @@ bool parse_input(char *shell_input, yash_shell_t *yash) {
         if (!token) {
             // MUST explicitly null terminate the execvp arguments. 
             new_command->whitespace_tokenized_command[new_command->whitespace_tokenized_command_size] = NULL;
-            process_group->commands[process_group->commands_size] = new_command; 
-            process_group->commands_size++;
+            add_new_command_to_process_group(process_group, new_command);
         }    
     }
 
