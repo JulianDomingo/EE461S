@@ -17,7 +17,7 @@ static const int max_commands_limit = 2;
 
 void destroy_process_group(process_group_t *process_group) {
     // free command strings
-    for (int command = 0; command < max_commands_limit; command++) {
+    for (int command = 0; command < process_group->commands_size; command++) {
         destroy_command(process_group->commands[command]); 
     } 
 
@@ -37,7 +37,7 @@ void initialize_process_group(process_group_t *process_group, char *full_command
 /*
  * Inserts a new command to the passed process group. 
  */
-void allocate_new_command(process_group_t *process_group, command_t *command) {
+void add_new_command(process_group_t *process_group, command_t *command) {
     if (process_group->commands_size == 2) {
         perror("command capacity exceeded");
         exit(EXIT_FAILURE);

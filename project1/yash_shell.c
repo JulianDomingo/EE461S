@@ -7,8 +7,6 @@
 #include "process_group.h"
 #include "yash_shell.h"
 
-// TODO: Write initialization functions for all struct types.
-
 /*
  * Moves the foreground job to the background then clears the old, duplicate entry.
  * The new process group is inserted from the front of the list.

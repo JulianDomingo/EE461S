@@ -130,8 +130,11 @@ int main() {
             continue;
         }
         else {
-            parse_input(shell_input, &yash);
-            /*execute_input(&yash);*/
+            bool invoke_execute_input = parse_input(shell_input, &yash);
+
+            if (invoke_execute_input) {
+                execute_input(&yash);
+            } 
         }
     }
 }

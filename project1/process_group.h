@@ -6,11 +6,11 @@
  * UT EID: jad5348
  */
 
+#include "command.h"
+
+#include <stdbool.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <stdbool.h>
-
-#include "command.h"
 
 enum status {RUNNING, STOPPED, INITIALIZING}; 
 
@@ -25,6 +25,6 @@ typedef struct process_group_t {
 
 void initialize_process_group(process_group_t *process_group, char *command_string);
 void destroy_process_group(process_group_t *process_group); 
-void allocate_new_command(process_group_t *process_group, command_t *command);
+void insert_new_command(process_group_t *process_group, command_t *command);
 
 #endif

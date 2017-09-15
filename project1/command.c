@@ -3,9 +3,13 @@
  * UT EID: jad5348
  */
 
-#include <stdlib.h>
-
 #include "command.h"
+#include "process_group.h"
+
+#include <fcntl.h>
+#include <stdlib.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
 /*
  * Creates and returns a new heap-allocated command_t variable. 
@@ -44,41 +48,4 @@ void destroy_command(command_t *command) {
 void add_argument_to_command(command_t *command, char *argument) {
     command->whitespace_tokenized_command[command->whitespace_tokenized_command_size] = argument;
     command->whitespace_tokenized_command_size++;
-}
-
-/*
- * Executes the command stored in the command_t variable.
- */
-void execute_command(command_t *command, process_group *process_group_of_command) {
-    int file_descriptor;
-
-    pid_t child_pid = fork();
-
-    if (child_pid == 0) {
-        // Child
-        
-        // File redirections
-        if (command->contains_redirect_stdin) {
-            file_descriptor = open(command->redirect_stdin_filename, "r");
-            dup2(file_descriptor, STDIN_FILENO);
-            close(file_descriptor);
-        }
-        if (command->contains_redirect_stdout) {
-            file_descriptor = open(command->redirect_stdout_filename, "r");
-            dup2(file_descriptor, STDIN_FILENO);
-            close(file_descriptor);
-        }
-        if (command->contains_redirect_stderr) {
-            file_descriptor = open(command->redirect_stderr_filename, "r");
-            dup2(file_descriptor, STDIN_FILENO);
-            close(file_descriptor);
-        }
-
-        // Piping
-        // TODO:
-    }
-    else {
-        // Parent 
-        // TODO:
-    }
 }

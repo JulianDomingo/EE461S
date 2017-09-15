@@ -73,4 +73,5 @@ void initialize_bg_jobs_stack(bg_jobs_stack_t *bg_jobs_stack) {
     bg_jobs_stack->pointer_to_tail = malloc(sizeof(bg_jobs_stack_node_t));
     bg_jobs_stack->pointer_to_head->is_head_or_tail = true;
     bg_jobs_stack->pointer_to_tail->is_head_or_tail = true;
+    bg_jobs_stack->pointer_to_head->next = NULL;
 }

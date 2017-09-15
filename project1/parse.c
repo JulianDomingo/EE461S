@@ -42,26 +42,29 @@ bool parse_input(char *shell_input, yash_shell_t *yash) {
     // retrieve the first token with input string separately to startup tokenizer 
     token = strtok(shell_input, delimiter);
 
-    while (token != NULL) {
+    while (token) {
         if (strcmp(token, "fg") == 0 ||
             strcmp(token, "bg") == 0 ||
             strcmp(token, "jobs") == 0)
         {
             // Job control commands are dealt with using our own implementation. Therefore, no fork is necessary after this method. 
             destroy_command(new_command);
+            free(new_command);
             destroy_process_group(process_group); 
             free(process_group);
-           
+
             // status for waitpid
             int status;
 
             if (strcmp(token, "fg") == 0) {
-                process_group_t *most_recent_process_group_in_bg = yash->bg_jobs_stack->pointer_to_head->next->process_group;
-               
-                if (!most_recent_process_group_in_bg) {
-                    printf("yash: fg: current: no such job");
+                bg_jobs_stack_node_t *most_recent_bg_process_group_node = yash->bg_jobs_stack->pointer_to_head->next;
+                
+                if (!most_recent_bg_process_group_node) {
+                    printf("yash: fg: current: no such job\n");
                 }
                 else {
+                    process_group_t *most_recent_process_group_in_bg = yash->bg_jobs_stack->pointer_to_head->next->process_group;
+               
                     killpg(most_recent_process_group_in_bg->process_group_id, SIGCONT);
                     printf("%s\n", most_recent_process_group_in_bg->full_command);
                     move_job_to_fg(yash);
@@ -72,27 +75,32 @@ bool parse_input(char *shell_input, yash_shell_t *yash) {
                 }
             }
             else if (strcmp(token, "bg") == 0) {
-                process_group_t *most_recent_process_group_in_bg = yash->bg_jobs_stack->pointer_to_head->next->process_group;
-
-                if (!most_recent_process_group_in_bg) {
-                    printf("yash: bg: current: no such job");
-                }
-                else if (most_recent_process_group_in_bg->process_status == RUNNING) {
-                    printf("yash: bg: job already running in background"); 
+                bg_jobs_stack_node_t *most_recent_bg_process_group_node = yash->bg_jobs_stack->pointer_to_head->next;
+                
+                if (!most_recent_bg_process_group_node) {
+                    printf("yash: bg: current: no such job\n");
                 }
                 else {
-                    killpg(most_recent_process_group_in_bg->process_group_id, SIGCONT);
-                    most_recent_process_group_in_bg->process_status = RUNNING;
-                    printf("[%d] + Running    %s\n", yash->bg_jobs_stack->size, most_recent_process_group_in_bg->full_command);
+                    process_group_t *most_recent_process_group_in_bg = yash->bg_jobs_stack->pointer_to_head->next->process_group;
 
-                    // Do NOT wait for completion (as if '&'), indicated by the "WNOHANG" argument. 
-                    waitpid(most_recent_process_group_in_bg->process_group_id, &status, WNOHANG);
-                }    
+                    if (most_recent_process_group_in_bg->process_status == RUNNING) {
+                        printf("yash: bg: job already running in background\n"); 
+                    }
+                    else {
+                        // Job is stopped, so continue it.
+                        killpg(most_recent_process_group_in_bg->process_group_id, SIGCONT);
+                        most_recent_process_group_in_bg->process_status = RUNNING;
+                        printf("[%d] + Running    %s\n", yash->bg_jobs_stack->size, most_recent_process_group_in_bg->full_command);
+
+                        // Do NOT wait for completion (as if '&'), indicated by the "WNOHANG" argument. 
+                        waitpid(most_recent_process_group_in_bg->process_group_id, &status, WNOHANG);
+                    }
+                } 
             }
             else {
                 // "jobs" command. As per bash, this command outputs nothing if no jobs exist. 
                 if (yash->bg_jobs_stack->size > 0) {
-                    bg_jobs_stack_node_t *runner = yash->bg_jobs_stack->pointer_to_tail;
+                    bg_jobs_stack_node_t *runner = yash->bg_jobs_stack->pointer_to_tail->previous;
 
                     int job_number = 1; 
       
@@ -118,9 +126,6 @@ bool parse_input(char *shell_input, yash_shell_t *yash) {
 
             // Point to a new heap-allocated command.
             new_command = create_command();
-
-            // Fetch the next token
-            token = strtok(NULL, delimiter);
         }
         else if (strcmp(token, "<") == 0) {
             // Retrieve file name.
@@ -139,6 +144,7 @@ bool parse_input(char *shell_input, yash_shell_t *yash) {
                 printf("yash: %s: No such file or directory\n", token); 
                 
                 destroy_command(new_command);
+                free(new_command);
                 destroy_process_group(process_group); 
                 free(process_group);
                 
@@ -158,19 +164,26 @@ bool parse_input(char *shell_input, yash_shell_t *yash) {
             new_command->contains_redirect_stderr = true;
         }
         else if (strcmp(token, "&") == 0) {
+            // We insert the process group to the bg jobs list in "execute.c".
             process_group->is_foreground_job = false; 
-            process_group->commands[process_group->commands_size] = new_command; 
-            process_group->commands_size++;
-
-            // Can pre-emptively return since the '&' token will always be the last in a given input.
-            return true;
         }
         else {
             // Token is either a command name or command argument; add normally to the command_t variable. 
-            add_argument_to_command(process_group->commands[process_group->commands_size], token); 
-            token = strtok(NULL, delimiter);
+            add_argument_to_command(new_command, token); 
         }
+        
+        // Fetch the next token
+        token = strtok(NULL, delimiter);
+        
+        // Before exiting the loop, ensure the newest command is present in the process group and the size is updated.
+        if (!token) {
+            process_group->commands[process_group->commands_size] = new_command; 
+            process_group->commands_size++;
+        }    
     }
+
+    // Finally, set the process group as the active group in the shell. 
+    yash->active_process_group = process_group;
 } 
 
 /*

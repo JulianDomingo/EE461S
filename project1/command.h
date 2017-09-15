@@ -1,12 +1,21 @@
 #ifndef _COMMAND_H_
 #define _COMMAND_H_
 
+/* 
+ * Name: Julian Domingo
+ * UT EID: jad5348
+ */
+
+#include <stdlib.h>
 #include <stdbool.h>
 
 typedef struct command_t {
+    // Process information
+    pid_t process_group_id;
+
     // File redirection
     bool contains_redirect_stdin;
-    bool contains_redirect_stout;
+    bool contains_redirect_stdout;
     bool contains_redirect_stderr;
     char *redirect_stdin_filename;
     char *redirect_stdout_filename;
