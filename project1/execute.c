@@ -55,11 +55,9 @@ void handle_single_command(yash_shell_t *yash) {
 
     if (child_pid == 0) {
         command_t *command = active_process_group->commands[0]; 
-
         handle_file_redirections(command);
 
         char **command_arguments = command->whitespace_tokenized_command;
-        
         execvp(command_arguments[0], command_arguments);
     }    
     else {
@@ -67,7 +65,9 @@ void handle_single_command(yash_shell_t *yash) {
         if (active_process_group->is_foreground_job) {
             // Foreground job
             yash->fg_job = active_process_group; 
-            waitpid(child_pid, &status, 0); 
+
+            // Wait for the foreground job to complete.
+            while (waitpid(child_pid, &status, 0) != child_pid); 
         }
         else {
             // Background job
@@ -82,7 +82,7 @@ void handle_single_command(yash_shell_t *yash) {
  * A second fork() call is needed to create a second child process.
  */
 void handle_double_commmand(yash_shell_t *yash) {
-
+    // TODO: implement
 }
 
 /*

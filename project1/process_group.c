@@ -21,6 +21,8 @@ void destroy_process_group(process_group_t *process_group) {
         destroy_command(process_group->commands[command]); 
     } 
 
+    printf("Freed all commands in the process group.\n");
+
     // free command holder 
     free(process_group->commands);
 
@@ -32,6 +34,10 @@ void initialize_process_group(process_group_t *process_group, char *full_command
     process_group->full_command = strdup(full_command);
     process_group->commands = malloc(sizeof(char *) * max_commands_limit); 
     process_group->process_status = INITIALIZING; 
+
+    // The process group is automatically foreground unless specified by '&' or explicitly 
+    // placed into the background (which are both handled in the parse.c file).
+    // process_group->is_foreground_job = true;
 }
 
 /*

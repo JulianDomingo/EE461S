@@ -129,8 +129,6 @@ int main() {
 
         shell_input[strlen(shell_input) - 1] = '\0';
 
-        printf("Checking signal status: %d", is_signal_input);
-
         if (!is_signal_input) {
             // check if no command entered
             if (strlen(trim(shell_input)) == 0) { 

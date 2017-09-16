@@ -1,0 +1,70 @@
+execve("/usr/bin/urxvtd", ["urxvtd"], 0x7ffebc18d6c0 /* 51 vars */) = 0
+brk(NULL)                               = 0x1eb8b8b000
+access("/etc/ld.so.preload", R_OK)      = -1 ENOENT (No such file or directory)
+open("/usr/lib/perl5/5.26/core_perl/CORE/tls/x86_64/libm.so.6", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/lib/perl5/5.26/core_perl/CORE/tls/x86_64", 0x7fff7dab9430) = -1 ENOENT (No such file or directory)
+open("/usr/lib/perl5/5.26/core_perl/CORE/tls/libm.so.6", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/lib/perl5/5.26/core_perl/CORE/tls", 0x7fff7dab9430) = -1 ENOENT (No such file or directory)
+open("/usr/lib/perl5/5.26/core_perl/CORE/x86_64/libm.so.6", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/lib/perl5/5.26/core_perl/CORE/x86_64", 0x7fff7dab9430) = -1 ENOENT (No such file or directory)
+open("/usr/lib/perl5/5.26/core_perl/CORE/libm.so.6", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/lib/perl5/5.26/core_perl/CORE", 0x7fff7dab9430) = -1 ENOENT (No such file or directory)
+open("/etc/ld.so.cache", O_RDONLY|O_CLOEXEC) = 3
+fstat(3, {st_mode=S_IFREG|0644, st_size=197576, ...}) = 0
+mmap(NULL, 197576, PROT_READ, MAP_PRIVATE, 3, 0) = 0x7f0a9d6f7000
+close(3)                                = 0
+open("/usr/lib/libm.so.6", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\3\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0\200^\0\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0755, st_size=1120496, ...}) = 0
+mmap(NULL, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0) = 0x7f0a9d6f5000
+mmap(NULL, 3215520, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x7f0a9d1f3000
+mprotect(0x7f0a9d303000, 2097152, PROT_NONE) = 0
+mmap(0x7f0a9d503000, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x110000) = 0x7f0a9d503000
+close(3)                                = 0
+open("/usr/lib/libfontconfig.so.1", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0`q\0\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0755, st_size=277888, ...}) = 0
+mmap(NULL, 2373672, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x7f0a9cfaf000
+mprotect(0x7f0a9cfed000, 2093056, PROT_NONE) = 0
+mmap(0x7f0a9d1ec000, 28672, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x3d000) = 0x7f0a9d1ec000
+close(3)                                = 0
+open("/usr/lib/libXft.so.2", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0000C\0\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0755, st_size=89592, ...}) = 0
+mmap(NULL, 2184808, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x7f0a9cd99000
+mprotect(0x7f0a9cdae000, 2093056, PROT_NONE) = 0
+mmap(0x7f0a9cfad000, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x14000) = 0x7f0a9cfad000
+close(3)                                = 0
+open("/usr/lib/libXrender.so.1", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0\360\33\0\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0755, st_size=43544, ...}) = 0
+mmap(NULL, 2138760, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x7f0a9cb8e000
+mprotect(0x7f0a9cb97000, 2097152, PROT_NONE) = 0
+mmap(0x7f0a9cd97000, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x9000) = 0x7f0a9cd97000
+close(3)                                = 0
+open("/usr/lib/libX11.so.6", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0\220\333\1\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0755, st_size=1306096, ...}) = 0
+mmap(NULL, 3403064, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x7f0a9c84f000
+mprotect(0x7f0a9c988000, 2097152, PROT_NONE) = 0
+mmap(0x7f0a9cb88000, 24576, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x139000) = 0x7f0a9cb88000
+close(3)                                = 0
+open("/usr/lib/libstartup-notification-1.so.0", O_RDONLY|O_CLOEXEC) = 3
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0P3\0\0\0\0\0\0"..., 832) = 832
+fstat(3, {st_mode=S_IFREG|0755, st_size=39648, ...}) = 0
+mmap(NULL, 2135192, PROT_READ|PROT_EXEC, MAP_PRIVATE|MAP_DENYWRITE, 3, 0) = 0x7f0a9c645000
+mprotect(0x7f0a9c64e000, 2093056, PROT_NONE) = 0
+mmap(0x7f0a9c84d000, 8192, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_FIXED|MAP_DENYWRITE, 3, 0x8000) = 0x7f0a9c84d000
+close(3)                                = 0
+open("/usr/lib/tls/x86_64/libperl.so", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/lib/tls/x86_64", 0x7fff7dab9310) = -1 ENOENT (No such file or directory)
+open("/usr/lib/tls/libperl.so", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/lib/tls", 0x7fff7dab9310)    = -1 ENOENT (No such file or directory)
+open("/usr/lib/x86_64/libperl.so", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/lib/x86_64", 0x7fff7dab9310) = -1 ENOENT (No such file or directory)
+open("/usr/lib/libperl.so", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
+stat("/usr/lib", {st_mode=S_IFDIR|0755, st_size=139264, ...}) = 0
+writev(2, [{iov_base="urxvtd", iov_len=6}, {iov_base=": ", iov_len=2}, {iov_base="error while loading shared libra"..., iov_len=36}, {iov_base=": ", iov_len=2}, {iov_base="libperl.so", iov_len=10}, {iov_base=": ", iov_len=2}, {iov_base="cannot open shared object file", iov_len=30}, {iov_base=": ", iov_len=2}, {iov_base="No such file or directory", iov_len=25}, {iov_base="\n", iov_len=1}], 10urxvtd: error while loading shared libraries: libperl.so: cannot open shared object file: No such file or directory
+) = 116
+exit_group(127)                         = ?
++++ exited with 127 +++
