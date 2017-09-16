@@ -104,6 +104,7 @@ void handle_double_commmand(yash_shell_t *yash) {
     pid_t child1_pid = fork();
 
     if (child1_pid == 0) {
+        printf("Executing command 1...\n");
         // Child 1 (group leader)
         pid_t session_id = setsid();
 
@@ -124,48 +125,52 @@ void handle_double_commmand(yash_shell_t *yash) {
 
             active_process_group->process_status = RUNNING;
 
-            int count = 0;
-            while (count < 2) {
-                pid_t pid = waitpid(-1, &status, WUNTRACED | WCONTINUED);
+            // **NOTE**: sig_ex3.c code, which doesn't take into account whether a job is in the fg / bg. 
+            /*int count = 0;*/
+            /*while (count < 2) {*/
+                /*pid_t pid = waitpid(-1, &status, WUNTRACED | WCONTINUED);*/
 
-                if (WIFEXITED(status)) {
-                    count++; 
-                }
-                else if (WIFSIGNALED(status)) {
-                    count++;
-                }
-                else if (WIFSTOPPED(status)) {
-                    sleep(4);
-                    kill(pid, SIGCONT);
-                }
+                /*if (WIFEXITED(status)) {*/
+                    /*count++; */
+                /*}*/
+                /*else if (WIFSIGNALED(status)) {*/
+                    /*count++;*/
+                /*}*/
+                /*else if (WIFSTOPPED(status)) {*/
+                    /*sleep(4);*/
+                    /*kill(pid, SIGCONT);*/
+                /*}*/
+            /*}*/
+
+            if (active_process_group->is_foreground_job) {
+                // Foreground job
+                yash->fg_job = active_process_group; 
+
+                printf("Waiting for foreground job to finish...\n");
+                // Wait for the foreground job to complete.
+                while (waitpid(child1_pid, &status, 0) != child1_pid); 
+
+                printf("Finished foreground job!\n");
             }
-            /*if (active_process_group->is_foreground_job) {*/
-                /*// Foreground job*/
-                /*yash->fg_job = active_process_group; */
+            else {
+                // Background job
+                move_job_to_bg(active_process_group, yash->bg_jobs_stack);
 
-                /*// Wait for the foreground job to complete.*/
-                /*while (waitpid(child1_pid, &status, 0) != child1_pid); */
-            /*}*/
-            /*else {*/
-                /*// Background job*/
-                /*move_job_to_bg(active_process_group, yash->bg_jobs_stack);*/
-
-                /*// Don't wait for the background job to complete.*/
-                /*waitpid(child1_pid, &status, WNOHANG); */
-            /*}*/
+                // Don't wait for the background job to complete.
+                waitpid(child1_pid, &status, WNOHANG); 
+            }
         }
         else {
             // Child 2
 
-            // Avoids race condition
-            sleep(1); 
+            // Avoids child2 execvp'ing before child1 finishes. 
+            printf("Executing command 2...\n");
             setpgid(0, child1_pid);   
 
             close(pipefd[1]);  
             dup2(pipefd[0], STDIN_FILENO);
 
             char **second_command_arguments = active_process_group->commands[1]->whitespace_tokenized_command;
-            printf("Executing command 2: '%s %s'\n", second_command_arguments[0], second_command_arguments[1]);
             execvp(second_command_arguments[0], second_command_arguments);
         }
     }

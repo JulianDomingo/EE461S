@@ -105,6 +105,7 @@ int main() {
                 break;
             
             case SIGCHLD:
+                printf("Detected terminated child process!\n"); 
                 if (foreground_job) {
                     destroy_process_group(foreground_job);
                     yash.fg_job = NULL;
