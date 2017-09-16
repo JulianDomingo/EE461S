@@ -8,6 +8,7 @@
 #include "yash_shell.h"
 #include "process_group.h"
 
+#include <stdio.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <fcntl.h>
@@ -50,13 +51,14 @@ void handle_single_command(yash_shell_t *yash) {
 
     process_group_t *active_process_group = yash->active_process_group;  
 
-    pid_t child_pid = fork();
+    pid_t child1_pid = fork();
 
-    if (child_pid == 0) {
+    if (child1_pid == 0) {
         command_t *command = active_process_group->commands[0]; 
         handle_file_redirections(command);
 
         char **command_arguments = command->whitespace_tokenized_command;
+
         execvp(command_arguments[0], command_arguments);
     }    
     else {
@@ -66,22 +68,88 @@ void handle_single_command(yash_shell_t *yash) {
             yash->fg_job = active_process_group; 
 
             // Wait for the foreground job to complete.
-            while (waitpid(child_pid, &status, 0) != child_pid); 
+            while (waitpid(child1_pid, &status, 0) != child1_pid); 
         }
         else {
             // Background job
             move_job_to_bg(active_process_group, yash->bg_jobs_stack);
-            waitpid(child_pid, &status, WNOHANG); 
+
+            // Don't wait for the background job to complete.
+            waitpid(child1_pid, &status, WNOHANG); 
         }
     }
 }
 
 
 /*
- * A second fork() call is needed to create a second child process.
+ * Handles shell inputs with two commands (contains a single '|' symbol). 
  */
 void handle_double_commmand(yash_shell_t *yash) {
-    // TODO: implement
+    // pipefd[0] == read-end, pipefd[1] == write-end
+    int pipefd[2];
+    int status;
+
+    process_group_t *active_process_group = yash->active_process_group;
+
+    if (active_process_group->commands_size != 2) {
+        perror("Parser did not successfully gather commands.");
+        exit(EXIT_FAILURE);
+    }
+
+    pid_t child1_pid = fork();
+
+    if (child1_pid == 0) {
+        // Child 1 (group leader)
+        active_process_group->process_group_id = setsid();
+        printf("Session ID (should be the same as PID of child1): %d\n", active_process_group);
+
+        close(pipefd[0]);
+        dup2(pipefd[1], STDOUT_FILENO);
+
+        char **first_command_arguments = active_process_group->commands[0]->whitespace_tokenized_command;
+        execvp(first_command_arguments[0], first_command_arguments);
+    }
+    else {
+        printf("Child 1 PID: %d\n", child1_pid);
+        // Parent
+        pid_t child2_pid = fork();
+
+        if (child2_pid == 0) {
+            // Parent
+            close(pipefd[0]);
+            close(pipefd[1]);
+
+            active_process_group->process_status = RUNNING;
+
+            if (active_process_group->is_foreground_job) {
+                // Foreground job
+                yash->fg_job = active_process_group; 
+
+                // Wait for the foreground job to complete.
+                while (waitpid(child1_pid, &status, 0) != child1_pid); 
+            }
+            else {
+                // Background job
+                move_job_to_bg(active_process_group, yash->bg_jobs_stack);
+
+                // Don't wait for the background job to complete.
+                waitpid(child1_pid, &status, WNOHANG); 
+            }
+        }
+        else {
+            // Child 2
+
+            // Avoids race condition
+            sleep(1); 
+            setpgid(0, child1_pid);   
+
+            close(pipefd[1]);  
+            dup2(pipefd[0], STDIN_FILENO);
+
+            char **second_command_arguments = active_process_group->commands[1]->whitespace_tokenized_command;
+            execvp(second_command_arguments[0], second_command_arguments);
+        }
+    }
 }
 
 /*
@@ -96,55 +164,4 @@ void execute_input(yash_shell_t *yash) {
     else {
         handle_double_commmand(yash);
     }
-
-    /*else {*/
-        /*// Parent*/
-        /*pid_t child2_pid = fork();*/
-
-        /*if (child2_pid == 0) {*/
-            /*// Child 2*/
-
-            /*// Join with the process group of child1 (the group leader).*/
-            /*setpgid(0, child1_pid);*/
-
-            /*// Closed unused write-end*/
-            /*close(pipefd[1]);*/
-
-            /*handle_file_redirections(active_process_group->commands[1]);*/
-
-            /*dup2(pipefd[0], STDIN_FILENO);*/
-
-            /*// execute_command(active_process_group->commands[1], active_process_group);*/
-            /*char **command_arguments = active_process_group->commands[1]->whitespace_tokenized_command;*/
-            /*execvp(command_arguments[1], command_arguments);*/
-        /*}*/
-        /*else {*/
-            /*// Parent*/
-
-            /*// Close unused pipes.*/
-            /*close(pipefd[0]);*/
-            /*close(pipefd[1]);*/
-
-            /*// Group together the commands in the process group by PID*/
-            /*active_process_group->process_status = RUNNING;*/
-            /*active_process_group->process_group_id = child1_pid;*/
-
-            /*for (int command = 0; command < max_commands_limit; command++) {*/
-                /*active_process_group->commands[command]->process_group_id = child1_pid;*/
-            /*}*/
-
-            /*int status;*/
-
-            /*// The parent should only wait for foreground jobs.*/
-            /*if (active_process_group->is_foreground_job) {*/
-                /*yash->fg_job = active_process_group; */
-                /*waitpid(active_process_group->process_group_id, &status, 0); */
-            /*}*/
-            /*else {*/
-                /*// Background job*/
-                /*move_job_to_bg(active_process_group, yash->bg_jobs_stack);*/
-                /*waitpid(active_process_group->process_group_id, &status, WNOHANG); */
-            /*}*/
-        /*}*/
-    /*}    */
 }
