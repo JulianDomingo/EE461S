@@ -8,7 +8,6 @@
 #include "yash_shell.h"
 #include "process_group.h"
 
-#include <stdio.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <fcntl.h>

@@ -15,13 +15,15 @@
 
 static const int max_commands_limit = 2;
 
+/*
+ * Deallocates the passed process_group_t variable.
+ */
 void destroy_process_group(process_group_t *process_group) {
     // free command strings
+    command_t **commands = process_group->commands;
     for (int command = 0; command < process_group->commands_size; command++) {
-        destroy_command(process_group->commands[command]); 
+        destroy_command(commands[command]); 
     } 
-
-    printf("Freed all commands in the process group.\n");
 
     // free command holder 
     free(process_group->commands);
@@ -30,14 +32,21 @@ void destroy_process_group(process_group_t *process_group) {
     free(process_group->full_command);
 }
 
-void initialize_process_group(process_group_t *process_group, char *full_command) {
+/*
+ * Returns a heap-allocated process_group_t variable.
+ */
+process_group_t *create_process_group(char *full_command) {
+    process_group_t *process_group = malloc(sizeof(process_group_t));
+
     process_group->full_command = strdup(full_command);
     process_group->commands = malloc(sizeof(char *) * max_commands_limit); 
     process_group->process_status = INITIALIZING; 
 
     // The process group is automatically foreground unless specified by '&' or explicitly 
     // placed into the background (which are both handled in the parse.c file).
-    // process_group->is_foreground_job = true;
+    process_group->is_foreground_job = true;
+
+    return process_group;
 }
 
 /*

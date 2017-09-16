@@ -6,6 +6,7 @@
 #include "command.h"
 #include "process_group.h"
 
+#include <stdio.h>
 #include <fcntl.h>
 #include <stdlib.h>
 #include <sys/stat.h>
@@ -17,6 +18,7 @@
 command_t *create_command() {
     command_t *new_command = malloc(sizeof(command_t));
     new_command->whitespace_tokenized_command = malloc(sizeof(char *));
+
     return new_command;
 }
 
@@ -32,11 +34,6 @@ void destroy_command(command_t *command) {
     }
     if (command->redirect_stderr_filename) {
         free(command->redirect_stderr_filename); 
-    }
-    
-    // Free the entries before freeing the entry holder.
-    for (int token = 0; token < command->whitespace_tokenized_command_size; token++) {
-        free(command->whitespace_tokenized_command[token]);
     }
 
     free(command->whitespace_tokenized_command);

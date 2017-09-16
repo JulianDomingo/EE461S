@@ -23,7 +23,7 @@ typedef struct process_group_t {
     bool is_foreground_job;
 } process_group_t;
 
-void initialize_process_group(process_group_t *process_group, char *command_string);
+process_group_t *create_process_group(char *command_string);
 void destroy_process_group(process_group_t *process_group); 
 void add_new_command_to_process_group(process_group_t *process_group, command_t *command);
 

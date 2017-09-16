@@ -90,7 +90,6 @@ int main() {
                     // Send SIGINT to the foreground job 
                     killpg(foreground_job->process_group_id, SIGINT);
                 }
-                // fputc('\n', stdout);
                 signal_from_child_process = 0;
                 is_signal_input = true;
                 break;
@@ -101,7 +100,6 @@ int main() {
                     killpg(foreground_job->process_group_id, SIGTSTP); 
                     move_job_to_bg(foreground_job, yash.bg_jobs_stack);
                 }
-                fputc('\n', stdout);
                 signal_from_child_process = 0;
                 is_signal_input = true;
                 break;
@@ -124,6 +122,7 @@ int main() {
         char *eof_checker = fgets(shell_input, MAX_CHARACTER_LIMIT, stdin);
 
         if (!eof_checker) {
+            // Ctrl + D to fgets() returns NULL, so check for it to know when to exit yash.
             exit(EXIT_SUCCESS);
         }
 

@@ -31,16 +31,14 @@
 bool parse_input(char *shell_input, yash_shell_t *yash) {
     char *trimmed_shell_input = trim(shell_input);     
 
-    process_group_t *process_group = malloc(sizeof(process_group_t)); 
-    initialize_process_group(process_group, shell_input);
-
+    process_group_t *process_group = create_process_group(trimmed_shell_input); 
     command_t *new_command = create_command();
 
     const char delimiter[2]= " ";
     char *token;
 
     // retrieve the first token with input string separately to startup tokenizer 
-    token = strtok(shell_input, delimiter);
+    token = strtok(trimmed_shell_input, delimiter);
 
     while (token) {
         if (strcmp(token, "fg") == 0 ||
