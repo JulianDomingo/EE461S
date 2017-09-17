@@ -69,6 +69,7 @@ bg_jobs_stack_node_t *create_stack_node(process_group_t *process_group) {
  * Initializes the passed background jobs stack.
  */
 void initialize_bg_jobs_stack(bg_jobs_stack_t *bg_jobs_stack) {
+    bg_jobs_stack->size = 0;
     bg_jobs_stack->pointer_to_head = malloc(sizeof(bg_jobs_stack_node_t));
     bg_jobs_stack->pointer_to_tail = malloc(sizeof(bg_jobs_stack_node_t));
     bg_jobs_stack->pointer_to_head->is_head_or_tail = true;

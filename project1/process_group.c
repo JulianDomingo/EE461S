@@ -37,10 +37,15 @@ void destroy_process_group(process_group_t *process_group) {
  */
 process_group_t *create_process_group(char *full_command) {
     process_group_t *process_group = malloc(sizeof(process_group_t));
+    
+    process_group->process_group_id = 0;
+    
+    process_group->process_status = INITIALIZING; 
 
     process_group->full_command = strdup(full_command);
+
     process_group->commands = malloc(sizeof(char *) * max_commands_limit); 
-    process_group->process_status = INITIALIZING; 
+    process_group->commands_size = 0;
 
     // The process group is automatically foreground unless specified by '&' or explicitly 
     // placed into the background (which are both handled in the parse.c file).

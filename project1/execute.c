@@ -63,12 +63,17 @@ void handle_single_command(yash_shell_t *yash) {
     }    
     else {
         // Parent
+        active_process_group->process_status = RUNNING;
+
         if (active_process_group->is_foreground_job) {
             // Foreground job
             yash->fg_job = active_process_group; 
 
             // Wait for the foreground job to complete.
             while (waitpid(child1_pid, &status, 0) != child1_pid); 
+            
+            // Delay of a tenth of a second ensuring any output to STDOUT is seen before the next '#' prompt.
+            usleep(100000);
         }
         else {
             // Background job
@@ -123,23 +128,6 @@ void handle_double_commmand(yash_shell_t *yash) {
             close(pipefd[1]);
 
             active_process_group->process_status = RUNNING;
-
-            // **NOTE**: sig_ex3.c code, which doesn't take into account whether a job is in the fg / bg. 
-            /*int count = 0;*/
-            /*while (count < 2) {*/
-                /*pid_t pid = waitpid(-1, &status, WUNTRACED | WCONTINUED);*/
-
-                /*if (WIFEXITED(status)) {*/
-                    /*count++; */
-                /*}*/
-                /*else if (WIFSIGNALED(status)) {*/
-                    /*count++;*/
-                /*}*/
-                /*else if (WIFSTOPPED(status)) {*/
-                    /*sleep(4);*/
-                    /*kill(pid, SIGCONT);*/
-                /*}*/
-            /*}*/
 
             if (active_process_group->is_foreground_job) {
                 // Foreground job

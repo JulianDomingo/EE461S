@@ -48,4 +48,3 @@ void move_job_to_fg(yash_shell_t *yash) {
         yash->bg_jobs_stack->size--;
     } 
 } 
-
