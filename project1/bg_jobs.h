@@ -26,8 +26,8 @@ typedef struct bg_jobs_linked_list_t {
 
 extern struct bg_jobs_linked_list_t linked_list;
 
+bg_jobs_linked_list_t *create_bg_jobs_linked_list();
 bg_jobs_linked_list_node_t *create_linked_list_node(process_group_t *process_group);
 void remove_linked_list_node(process_group_t *process_group_to_remove, bg_jobs_linked_list_t *linked_list);
-void initialize_bg_jobs_linked_list(bg_jobs_linked_list_t *linked_list);
 
 #endif

@@ -58,6 +58,7 @@ void remove_linked_list_node(process_group_t *process_group_to_remove, bg_jobs_l
  */
 bg_jobs_linked_list_node_t *create_linked_list_node(process_group_t *process_group) {
     bg_jobs_linked_list_node_t *linked_list_node = malloc(sizeof(bg_jobs_linked_list_node_t));
+
     linked_list_node->process_group = process_group;
     linked_list_node->next = NULL;
     linked_list_node->previous = NULL;
@@ -68,11 +69,14 @@ bg_jobs_linked_list_node_t *create_linked_list_node(process_group_t *process_gro
 /*
  * Initializes the passed background jobs linked_list.
  */
-void initialize_bg_jobs_linked_list(bg_jobs_linked_list_t *bg_jobs_linked_list) {
+bg_jobs_linked_list_t *create_bg_jobs_linked_list() {
+    bg_jobs_linked_list_t *bg_jobs_linked_list = malloc(sizeof(bg_jobs_linked_list_t));
+
     bg_jobs_linked_list->size = 0;
     bg_jobs_linked_list->pointer_to_head = malloc(sizeof(bg_jobs_linked_list_node_t));
     bg_jobs_linked_list->pointer_to_tail = malloc(sizeof(bg_jobs_linked_list_node_t));
     bg_jobs_linked_list->pointer_to_head->is_head_or_tail = true;
     bg_jobs_linked_list->pointer_to_tail->is_head_or_tail = true;
     bg_jobs_linked_list->pointer_to_head->next = NULL;
+    bg_jobs_linked_list->pointer_to_head->previous = NULL;
 }

@@ -94,7 +94,9 @@ void handle_single_command(yash_shell_t *yash) {
             yash->fg_job = active_process_group; 
 
             // Wait for the foreground job to complete.
-            while (waitpid(child1_pid, &status, 0) != child1_pid); 
+            while (waitpid(child1_pid, &status, 0) != child1_pid) {
+                // TODO: use same code inside handle_double_commmand() for this while loop in common function 
+            }
             
             // Delay of a tenth of a second ensuring any output to STDOUT is seen before the next '#' prompt.
             usleep(100000);
@@ -171,7 +173,10 @@ void handle_double_commmand(yash_shell_t *yash) {
                                 killpg(active_process_group->process_group_id, SIGINT);                                
                     
                                 remove_linked_list_node(active_process_group, yash->bg_jobs_linked_list);
-                                break;
+                                signal_interrupt = 0;
+
+                                // Terminate this child (which will send SIGCHLD to the parent process)
+                                exit(EXIT_SUCCESS);
 
                             case SIGTSTP:
                                 printf("Received interrupting Ctrl-Z!\n");
@@ -184,12 +189,18 @@ void handle_double_commmand(yash_shell_t *yash) {
                                         yash->bg_jobs_linked_list->size,
                                         "Stopped", 
                                         active_process_group->full_command);
+                                signal_interrupt = 0;
                                 break;
 
                             case SIGCONT:
                                 printf("Received continuation signal!\n");
                                 // Don't break from waitpid() block, as yash needs to wait for foreground jobs to terminate
                                 killpg(active_process_group->process_group_id, SIGCONT);                                
+                                signal_interrupt = 0;
+                                break;
+                            
+                            default:
+                                // Do nothing if no signal was received.
                                 break;
                         }                          
                     } 

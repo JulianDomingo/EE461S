@@ -53,8 +53,7 @@ int main() {
     yash.process_id = getpid();
     yash.active_process_group = NULL;
     yash.fg_job = NULL;
-    yash.bg_jobs_linked_list = malloc(sizeof(bg_jobs_linked_list_t));
-    initialize_bg_jobs_linked_list(yash.bg_jobs_linked_list);
+    yash.bg_jobs_linked_list = create_bg_jobs_linked_list(); 
 
     // Initialize signals
     if (signal(SIGINT, sig_handler) == SIG_ERR) {
