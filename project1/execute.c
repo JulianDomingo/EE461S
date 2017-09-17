@@ -14,6 +14,29 @@
 #include <fcntl.h>
 
 static const int max_commands_limit = 2;
+volatile sig_atomic_t signal_from_child_process;
+
+/*
+ * Signal handler called when interrupting system calls: 
+ *  1. Handling Ctrl-C to a foreground job for termination
+ *  2. Handling Ctrl-Z to a foreground job for suspension + transfer to background
+ *  3. Handling continuation of a suspended job. 
+ */
+static void sig_handler(int signum) {
+    switch (signum) {
+        case SIGINT:
+            signal_from_child_process = SIGINT; 
+            break; 
+        case SIGTSTP:
+            signal_from_child_process = SIGTSTP;
+            break;
+        case SIGCONT:
+            signal_from_child_process = SIGCONT;
+            break;
+        default: 
+            break;
+    }
+}
 
 /*
  * Handles file redirections for the given command should they exist.
@@ -168,6 +191,17 @@ void handle_double_commmand(yash_shell_t *yash) {
  */
 void execute_input(yash_shell_t *yash) {
     process_group_t *active_process_group = yash->active_process_group;
+
+    // Initialize signals
+    if (signal(SIGINT, sig_handler) == SIG_ERR) {
+        printf("signal(SIGINT) error");
+    }
+    if (signal(SIGTSTP, sig_handler) == SIG_ERR) {
+        printf("signal(SIGTSTP) error");
+    }
+    if (signal(SIGCONT, sig_handler) == SIG_ERR) {
+        printf("signal(SIGCONT) error");
+    }
 
     if (active_process_group->commands_size == 1) {
         handle_single_command(yash);

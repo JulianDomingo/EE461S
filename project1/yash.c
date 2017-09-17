@@ -26,7 +26,7 @@ bool show_terminal_prompt;
 volatile sig_atomic_t signal_from_child_process;
 
 /*
- * Handler for needed signals to implement.  
+ * Signal handler called from user input (Ctrl-C, Ctrl-Z) / terminated child processes. 
  */
 static void sig_handler(int signum) {
     switch (signum) {
@@ -48,7 +48,7 @@ int main() {
     char shell_input[MAX_CHARACTER_LIMIT];
     bool is_signal_input;
 
-    // initialize yash shell
+    // Initialize yash shell
     struct yash_shell_t yash;
     yash.process_id = getpid();
     yash.active_process_group = NULL;
@@ -56,6 +56,7 @@ int main() {
     yash.bg_jobs_stack = malloc(sizeof(bg_jobs_stack_t));
     initialize_bg_jobs_stack(yash.bg_jobs_stack);
 
+    // Initialize signals
     if (signal(SIGINT, sig_handler) == SIG_ERR) {
         printf("signal(SIGINT) error");
     }
