@@ -39,8 +39,7 @@ static void sig_tstp(int signo) {
 }
 
 int main(void) {
-
-  char ch[1]={0};
+  // char ch[1]={0};
   
   if (pipe(pipefd) == -1) {
     perror("pipe");
@@ -97,7 +96,7 @@ int main(void) {
       dup2(pipefd[0],STDIN_FILENO);
       char *myargs[3];
       myargs[0] = strdup("grep");   // program: "grep" (word count)
-      myargs[1] = strdup("firefox");   // argument: "firefox"
+      myargs[1] = strdup("sig_ex3.c");   // argument: "firefox"
       myargs[2] = NULL;           // marks end of array
       execvp(myargs[0], myargs);  // runs word count
     }
@@ -108,7 +107,7 @@ int main(void) {
     close(pipefd[0]); // close the read end
     dup2(pipefd[1],STDOUT_FILENO);
     char *myargs[2];
-    myargs[0] = strdup("top");   // program: "top" (writes to stdout which is now pipe)
+    myargs[0] = strdup("ls");   // program: "top" (writes to stdout which is now pipe)
     myargs[1] = NULL;           
     execvp(myargs[0], myargs);  // runs top
   }

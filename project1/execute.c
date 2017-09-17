@@ -104,7 +104,6 @@ void handle_double_commmand(yash_shell_t *yash) {
     pid_t child1_pid = fork();
 
     if (child1_pid == 0) {
-        printf("Executing command 1...\n");
         // Child 1 (group leader)
         pid_t session_id = setsid();
 
@@ -146,11 +145,11 @@ void handle_double_commmand(yash_shell_t *yash) {
                 // Foreground job
                 yash->fg_job = active_process_group; 
 
-                printf("Waiting for foreground job to finish...\n");
                 // Wait for the foreground job to complete.
                 while (waitpid(child1_pid, &status, 0) != child1_pid); 
 
-                printf("Finished foreground job!\n");
+                // Delay of a tenth of a second ensuring any output to STDOUT is seen before the next '#' prompt.
+                usleep(100000);
             }
             else {
                 // Background job
@@ -164,7 +163,6 @@ void handle_double_commmand(yash_shell_t *yash) {
             // Child 2
 
             // Avoids child2 execvp'ing before child1 finishes. 
-            printf("Executing command 2...\n");
             setpgid(0, child1_pid);   
 
             close(pipefd[1]);  
