@@ -114,7 +114,7 @@ bool parse_input(char *shell_input, yash_shell_t *yash) {
                 }    
             }
 
-            // Based on "https://piazza.com/class/j6zelbm58vn61v?cid=28", this parser only handles job control commands by themselves.
+            // Required to implement job control ourselves, so execute_input() shouldn't be called (contains execvp()).
             return false;
         }
         else if (strcmp(token, "|") == 0) {
