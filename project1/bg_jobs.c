@@ -54,11 +54,6 @@ void remove_linked_list_node(process_group_t *process_group_to_remove, bg_jobs_l
 }
 
 /*
- * Retrieves the most recently inserted background job from the jobs list.
- */
-
-
-/*
  * Returns a new bg job linked_list node.
  */
 bg_jobs_linked_list_node_t *create_linked_list_node(process_group_t *process_group) {

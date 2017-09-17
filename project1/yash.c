@@ -97,6 +97,7 @@ int main() {
 
             case SIGTSTP:
                 if (foreground_job) {
+                    // TODO: Move this code to execute.c, as a Ctrl-Z WON'T be caught by the signal handler in yash.c, **since it isn't in the same process as the process executing the system call**. 
                     // Send SIGTSTP to the foreground job 
                     killpg(foreground_job->process_group_id, SIGTSTP); 
                     move_job_to_bg(foreground_job, yash.bg_jobs_linked_list);

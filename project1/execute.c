@@ -158,18 +158,21 @@ void handle_double_commmand(yash_shell_t *yash) {
                 // Foreground job
                 yash->fg_job = active_process_group; 
 
+                bool signal_received = false;
+
                 // Wait for the foreground job to complete.
                 while (waitpid(child1_pid, &status, 0) != child1_pid) {
                     // 'errno' is set to 'EINTR' when 'WNOHANG' isn't passed to waitpid() and an unblocked signal or 'SIGCHLD' was caught.
                     if (errno == EINTR) {
                         switch (signal_interrupt) {
                             case SIGINT:
+                                signal_received = true;
                                 killpg(active_process_group->process_group_id, SIGINT);                                
                                 break;
 
                             case SIGTSTP:
                                 killpg(active_process_group->process_group_id, SIGTSTP);                                
-
+                                move_job_to_bg(active_process_group, yash->bg_jobs_linked_list);
                                 break;
 
                             case SIGCONT:
@@ -178,6 +181,11 @@ void handle_double_commmand(yash_shell_t *yash) {
 
                         }                          
                     } 
+
+                    if (signal_received) {
+                        // Don't wait for foreground job to terminate if a signal was received.
+                        break;
+                    }
                 }
 
                 // Delay of a tenth of a second ensuring any output to STDOUT from the system call is seen before the next '#' prompt.

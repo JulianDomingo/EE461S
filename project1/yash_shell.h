@@ -16,7 +16,8 @@ typedef struct yash_shell_t {
     struct process_group_t *fg_job;
 } yash_shell_t;
 
-void move_job_to_bg(process_group_t *process_group, bg_jobs_linked_list_t *linked_list);
+
+void move_job_to_bg(process_group_t *process_group, bg_jobs_linked_list_t *linked_list); 
 void move_job_to_fg(yash_shell_t *yash);
 
 #endif

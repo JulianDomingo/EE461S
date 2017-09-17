@@ -61,7 +61,7 @@ bool parse_input(char *shell_input, yash_shell_t *yash) {
                     printf("yash: fg: current: no such job\n");
                 }
                 else {
-                    process_group_t *most_recent_process_group_in_bg = yash->bg_jobs_linked_list->pointer_to_head->next->process_group;
+                    process_group_t *most_recent_process_group_in_bg = most_recent_bg_process_group_node->process_group;
                
                     killpg(most_recent_process_group_in_bg->process_group_id, SIGCONT);
                     printf("%s\n", most_recent_process_group_in_bg->full_command);
@@ -79,7 +79,7 @@ bool parse_input(char *shell_input, yash_shell_t *yash) {
                     printf("yash: bg: current: no such job\n");
                 }
                 else {
-                    process_group_t *most_recent_process_group_in_bg = yash->bg_jobs_linked_list->pointer_to_head->next->process_group;
+                    process_group_t *most_recent_process_group_in_bg = most_recent_bg_process_group_node->process_group;
 
                     if (most_recent_process_group_in_bg->process_status == RUNNING) {
                         printf("yash: bg: job already running in background\n"); 
