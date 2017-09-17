@@ -55,13 +55,13 @@ bool parse_input(char *shell_input, yash_shell_t *yash) {
             int status;
 
             if (strcmp(token, "fg") == 0) {
-                bg_jobs_stack_node_t *most_recent_bg_process_group_node = yash->bg_jobs_stack->pointer_to_head->next;
+                bg_jobs_linked_list_node_t *most_recent_bg_process_group_node = yash->bg_jobs_linked_list->pointer_to_head->next;
                 
                 if (!most_recent_bg_process_group_node) {
                     printf("yash: fg: current: no such job\n");
                 }
                 else {
-                    process_group_t *most_recent_process_group_in_bg = yash->bg_jobs_stack->pointer_to_head->next->process_group;
+                    process_group_t *most_recent_process_group_in_bg = yash->bg_jobs_linked_list->pointer_to_head->next->process_group;
                
                     killpg(most_recent_process_group_in_bg->process_group_id, SIGCONT);
                     printf("%s\n", most_recent_process_group_in_bg->full_command);
@@ -73,13 +73,13 @@ bool parse_input(char *shell_input, yash_shell_t *yash) {
                 }
             }
             else if (strcmp(token, "bg") == 0) {
-                bg_jobs_stack_node_t *most_recent_bg_process_group_node = yash->bg_jobs_stack->pointer_to_head->next;
+                bg_jobs_linked_list_node_t *most_recent_bg_process_group_node = yash->bg_jobs_linked_list->pointer_to_head->next;
                 
                 if (!most_recent_bg_process_group_node) {
                     printf("yash: bg: current: no such job\n");
                 }
                 else {
-                    process_group_t *most_recent_process_group_in_bg = yash->bg_jobs_stack->pointer_to_head->next->process_group;
+                    process_group_t *most_recent_process_group_in_bg = yash->bg_jobs_linked_list->pointer_to_head->next->process_group;
 
                     if (most_recent_process_group_in_bg->process_status == RUNNING) {
                         printf("yash: bg: job already running in background\n"); 
@@ -88,7 +88,7 @@ bool parse_input(char *shell_input, yash_shell_t *yash) {
                         // Job is stopped, so continue it.
                         killpg(most_recent_process_group_in_bg->process_group_id, SIGCONT);
                         most_recent_process_group_in_bg->process_status = RUNNING;
-                        printf("[%d] + Running    %s\n", yash->bg_jobs_stack->size, most_recent_process_group_in_bg->full_command);
+                        printf("[%d] + Running    %s\n", yash->bg_jobs_linked_list->size, most_recent_process_group_in_bg->full_command);
 
                         // Do NOT wait for completion (as if '&'), indicated by the "WNOHANG" argument. 
                         waitpid(most_recent_process_group_in_bg->process_group_id, &status, WNOHANG);
@@ -97,8 +97,8 @@ bool parse_input(char *shell_input, yash_shell_t *yash) {
             }
             else {
                 // "jobs" command. As per bash, this command outputs nothing if no jobs exist. 
-                if (yash->bg_jobs_stack->size > 0) {
-                    bg_jobs_stack_node_t *runner = yash->bg_jobs_stack->pointer_to_tail->previous;
+                if (yash->bg_jobs_linked_list->size > 0) {
+                    bg_jobs_linked_list_node_t *runner = yash->bg_jobs_linked_list->pointer_to_tail->previous;
 
                     int job_number = 1; 
       

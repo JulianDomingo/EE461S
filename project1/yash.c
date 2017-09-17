@@ -23,7 +23,7 @@ int status;
 int pipefd[2];
 char **parsed_input;
 bool show_terminal_prompt;
-volatile sig_atomic_t signal_from_child_process;
+volatile sig_atomic_t signal_interrupt;
 
 /*
  * Signal handler called from user input (Ctrl-C, Ctrl-Z) / terminated child processes. 
@@ -31,13 +31,13 @@ volatile sig_atomic_t signal_from_child_process;
 static void sig_handler(int signum) {
     switch (signum) {
         case SIGINT:
-            signal_from_child_process = SIGINT; 
+            signal_interrupt = SIGINT; 
             break; 
         case SIGTSTP:
-            signal_from_child_process = SIGTSTP;
+            signal_interrupt = SIGTSTP;
             break;
         case SIGCHLD:
-            signal_from_child_process = SIGCHLD;
+            signal_interrupt = SIGCHLD;
             break;
         default:
             break;
@@ -53,8 +53,8 @@ int main() {
     yash.process_id = getpid();
     yash.active_process_group = NULL;
     yash.fg_job = NULL;
-    yash.bg_jobs_stack = malloc(sizeof(bg_jobs_stack_t));
-    initialize_bg_jobs_stack(yash.bg_jobs_stack);
+    yash.bg_jobs_linked_list = malloc(sizeof(bg_jobs_linked_list_t));
+    initialize_bg_jobs_linked_list(yash.bg_jobs_linked_list);
 
     // Initialize signals
     if (signal(SIGINT, sig_handler) == SIG_ERR) {
@@ -85,13 +85,13 @@ int main() {
 
         is_signal_input = false;
 
-        switch (signal_from_child_process) {
+        switch (signal_interrupt) {
             case SIGINT:
                 if (foreground_job) {
                     // Send SIGINT to the foreground job 
                     killpg(foreground_job->process_group_id, SIGINT);
                 }
-                signal_from_child_process = 0;
+                signal_interrupt = 0;
                 is_signal_input = true;
                 break;
 
@@ -99,9 +99,9 @@ int main() {
                 if (foreground_job) {
                     // Send SIGTSTP to the foreground job 
                     killpg(foreground_job->process_group_id, SIGTSTP); 
-                    move_job_to_bg(foreground_job, yash.bg_jobs_stack);
+                    move_job_to_bg(foreground_job, yash.bg_jobs_linked_list);
                 }
-                signal_from_child_process = 0;
+                signal_interrupt = 0;
                 is_signal_input = true;
                 break;
             
@@ -110,7 +110,7 @@ int main() {
                     destroy_process_group(foreground_job);
                     yash.fg_job = NULL;
                 }
-                signal_from_child_process = 0;
+                signal_interrupt = 0;
                 // Don't set "is_signal_input" to true, because this signal is sent naturally
                 break;
             

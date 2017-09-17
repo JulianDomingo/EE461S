@@ -12,9 +12,10 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <fcntl.h>
+#include <errno.h>
 
 static const int max_commands_limit = 2;
-volatile sig_atomic_t signal_from_child_process;
+volatile sig_atomic_t signal_interrupt;
 
 /*
  * Signal handler called when interrupting system calls: 
@@ -25,13 +26,13 @@ volatile sig_atomic_t signal_from_child_process;
 static void sig_handler(int signum) {
     switch (signum) {
         case SIGINT:
-            signal_from_child_process = SIGINT; 
+            signal_interrupt = SIGINT; 
             break; 
         case SIGTSTP:
-            signal_from_child_process = SIGTSTP;
+            signal_interrupt = SIGTSTP;
             break;
         case SIGCONT:
-            signal_from_child_process = SIGCONT;
+            signal_interrupt = SIGCONT;
             break;
         default: 
             break;
@@ -101,7 +102,7 @@ void handle_single_command(yash_shell_t *yash) {
         else {
             printf("Background job detected!\n");
             // Background job
-            move_job_to_bg(active_process_group, yash->bg_jobs_stack);
+            move_job_to_bg(active_process_group, yash->bg_jobs_linked_list);
 
             // Don't wait for the background job to complete.
             waitpid(child1_pid, &status, WNOHANG); 
@@ -158,14 +159,33 @@ void handle_double_commmand(yash_shell_t *yash) {
                 yash->fg_job = active_process_group; 
 
                 // Wait for the foreground job to complete.
-                while (waitpid(child1_pid, &status, 0) != child1_pid); 
+                while (waitpid(child1_pid, &status, 0) != child1_pid) {
+                    // 'errno' is set to 'EINTR' when 'WNOHANG' isn't passed to waitpid() and an unblocked signal or 'SIGCHLD' was caught.
+                    if (errno == EINTR) {
+                        switch (signal_interrupt) {
+                            case SIGINT:
+                                killpg(active_process_group->process_group_id, SIGINT);                                
+                                break;
 
-                // Delay of a tenth of a second ensuring any output to STDOUT is seen before the next '#' prompt.
+                            case SIGTSTP:
+                                killpg(active_process_group->process_group_id, SIGTSTP);                                
+
+                                break;
+
+                            case SIGCONT:
+                                killpg(active_process_group->process_group_id, SIGCONT);                                
+                                break;
+
+                        }                          
+                    } 
+                }
+
+                // Delay of a tenth of a second ensuring any output to STDOUT from the system call is seen before the next '#' prompt.
                 usleep(100000);
             }
             else {
                 // Background job
-                move_job_to_bg(active_process_group, yash->bg_jobs_stack);
+                move_job_to_bg(active_process_group, yash->bg_jobs_linked_list);
 
                 // Don't wait for the background job to complete.
                 waitpid(child1_pid, &status, WNOHANG); 
