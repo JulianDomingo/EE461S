@@ -114,7 +114,7 @@ bool parse_input(char *shell_input, yash_shell_t *yash) {
                 }    
             }
 
-            // Do not fork after this function and immediately continue to the next input 
+            // Based on "https://piazza.com/class/j6zelbm58vn61v?cid=28", this parser only handles job control commands by themselves.
             return false;
         }
         else if (strcmp(token, "|") == 0) {
@@ -124,9 +124,6 @@ bool parse_input(char *shell_input, yash_shell_t *yash) {
 
             // Point to a new heap-allocated command.
             new_command = create_command();
-            
-            // Fetch the next token
-            token = strtok(NULL, delimiter);
         }
         else if (strcmp(token, "<") == 0) {
             // Retrieve file name.
@@ -139,9 +136,6 @@ bool parse_input(char *shell_input, yash_shell_t *yash) {
                 new_command->redirect_stdin_filename = strdup(token);
                 new_command->contains_redirect_stdin = true;
                 fclose(file_pointer);
-                
-                // Fetch the next token
-                token = strtok(NULL, delimiter);
             }
             else {
                 fclose(file_pointer);
@@ -160,18 +154,12 @@ bool parse_input(char *shell_input, yash_shell_t *yash) {
             token = strtok(NULL, delimiter);
             new_command->redirect_stdout_filename = strdup(token);
             new_command->contains_redirect_stdout = true;
-            
-            // Fetch the next token
-            token = strtok(NULL, delimiter);
         }
         else if (strcmp(token, "2>") == 0) {
             // Retrieve file name.
             token = strtok(NULL, delimiter);
             new_command->redirect_stderr_filename = strdup(token);
             new_command->contains_redirect_stderr = true;
-            
-            // Fetch the next token
-            token = strtok(NULL, delimiter);
         }
         else if (strcmp(token, "&") == 0) {
             // We insert the process group to the bg jobs list in "execute.c".
@@ -180,11 +168,11 @@ bool parse_input(char *shell_input, yash_shell_t *yash) {
         else {
             // Token is either a command name or command argument; add normally to the command_t variable. 
             add_argument_to_command(new_command, token); 
-        
-            // Fetch the next token
-            token = strtok(NULL, delimiter);
         }
         
+        // Fetch the next token
+        token = strtok(NULL, delimiter);
+
         // Before exiting the loop, ensure the newest command is present in the process group and the size is updated.
         if (!token) {
             // MUST explicitly null terminate the execvp arguments. 

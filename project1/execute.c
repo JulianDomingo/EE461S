@@ -44,7 +44,7 @@ void handle_file_redirections(command_t *command) {
 }
 
 /*
- * Handles pipelines containing a single command differently from pipeliens with two commands.
+ * Handles input containing a single command differently from input with two commands.
  */
 void handle_single_command(yash_shell_t *yash) {
     int status;
@@ -76,6 +76,7 @@ void handle_single_command(yash_shell_t *yash) {
             usleep(100000);
         }
         else {
+            printf("Background job detected!\n");
             // Background job
             move_job_to_bg(active_process_group, yash->bg_jobs_stack);
 
