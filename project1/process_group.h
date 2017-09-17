@@ -12,7 +12,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-enum status {RUNNING, STOPPED, INITIALIZING}; 
+enum status {RUNNING, STOPPED, INITIALIZING, DONE}; 
 
 typedef struct process_group_t {
     pid_t process_group_id;

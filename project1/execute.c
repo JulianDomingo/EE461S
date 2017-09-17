@@ -166,24 +166,36 @@ void handle_double_commmand(yash_shell_t *yash) {
                     if (errno == EINTR) {
                         switch (signal_interrupt) {
                             case SIGINT:
+                                printf("Received interrupting Ctrl-C!\n");
                                 signal_received = true;
                                 killpg(active_process_group->process_group_id, SIGINT);                                
+                    
+                                remove_linked_list_node(active_process_group, yash->bg_jobs_linked_list);
                                 break;
 
                             case SIGTSTP:
+                                printf("Received interrupting Ctrl-Z!\n");
+                                signal_received = true;
+                                
                                 killpg(active_process_group->process_group_id, SIGTSTP);                                
                                 move_job_to_bg(active_process_group, yash->bg_jobs_linked_list);
+                                
+                                printf("[%d] + %s    %s\n", 
+                                        yash->bg_jobs_linked_list->size,
+                                        "Stopped", 
+                                        active_process_group->full_command);
                                 break;
 
                             case SIGCONT:
+                                printf("Received continuation signal!\n");
+                                // Don't break from waitpid() block, as yash needs to wait for foreground jobs to terminate
                                 killpg(active_process_group->process_group_id, SIGCONT);                                
                                 break;
-
                         }                          
                     } 
 
                     if (signal_received) {
-                        // Don't wait for foreground job to terminate if a signal was received.
+                        // Stop blocking if termination / suspension signal is received
                         break;
                     }
                 }
@@ -201,8 +213,6 @@ void handle_double_commmand(yash_shell_t *yash) {
         }
         else {
             // Child 2
-
-            // Avoids child2 execvp'ing before child1 finishes. 
             setpgid(0, child1_pid);   
 
             close(pipefd[1]);  

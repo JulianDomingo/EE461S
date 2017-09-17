@@ -82,13 +82,15 @@ bool parse_input(char *shell_input, yash_shell_t *yash) {
                     process_group_t *most_recent_process_group_in_bg = most_recent_bg_process_group_node->process_group;
 
                     if (most_recent_process_group_in_bg->process_status == RUNNING) {
-                        printf("yash: bg: job already running in background\n"); 
+                        printf("yash: bg: job [%d] already running in background\n", yash->bg_jobs_linked_list->size); 
                     }
                     else {
                         // Job is stopped, so continue it.
                         killpg(most_recent_process_group_in_bg->process_group_id, SIGCONT);
                         most_recent_process_group_in_bg->process_status = RUNNING;
-                        printf("[%d] + Running    %s\n", yash->bg_jobs_linked_list->size, most_recent_process_group_in_bg->full_command);
+                        printf("[%d] + Running    %s\n", 
+                                yash->bg_jobs_linked_list->size, 
+                                most_recent_process_group_in_bg->full_command);
 
                         // Do NOT wait for completion (as if '&'), indicated by the "WNOHANG" argument. 
                         waitpid(most_recent_process_group_in_bg->process_group_id, &status, WNOHANG);
@@ -162,7 +164,7 @@ bool parse_input(char *shell_input, yash_shell_t *yash) {
             new_command->contains_redirect_stderr = true;
         }
         else if (strcmp(token, "&") == 0) {
-            // We insert the process group to the bg jobs list in "execute.c".
+            // '&' is a metacharacter which tells the shell to NOT wait for the job to finish.
             process_group->is_foreground_job = false; 
         }
         else {
