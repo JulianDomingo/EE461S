@@ -7,6 +7,7 @@
 #include "process_group.h"
 
 #include <stdbool.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 /*
@@ -80,4 +81,6 @@ bg_jobs_linked_list_t *create_bg_jobs_linked_list() {
     bg_jobs_linked_list->pointer_to_tail->is_head_or_tail = true;
     bg_jobs_linked_list->pointer_to_head->next = NULL;
     bg_jobs_linked_list->pointer_to_head->previous = NULL;
+
+    return bg_jobs_linked_list;
 }

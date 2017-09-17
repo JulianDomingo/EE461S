@@ -85,10 +85,10 @@ bool parse_input(char *shell_input, yash_shell_t *yash) {
                         printf("yash: bg: job [%d] already running in background\n", yash->bg_jobs_linked_list->size); 
                     }
                     else {
-                        // Job is stopped, so continue it.
+                        // Job is stopped, so continue it in the background
                         killpg(most_recent_process_group_in_bg->process_group_id, SIGCONT);
                         most_recent_process_group_in_bg->process_status = RUNNING;
-                        printf("[%d] + Running    %s\n", 
+                        printf("[%d]+ %s\n", 
                                 yash->bg_jobs_linked_list->size, 
                                 most_recent_process_group_in_bg->full_command);
 
@@ -105,7 +105,7 @@ bool parse_input(char *shell_input, yash_shell_t *yash) {
                     int job_number = 1; 
       
                     while (runner && !runner->is_head_or_tail) {
-                        printf("[%d] %s %s    %s\n", 
+                        printf("[%d]%s %s            %s\n", 
                                 job_number, 
                                 (runner->previous) ? "+" : "-",  
                                 (runner->process_group->process_status == RUNNING) ? "Running" : "Stopped",

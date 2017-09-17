@@ -78,11 +78,12 @@ void handle_single_command(yash_shell_t *yash) {
     pid_t child1_pid = fork();
 
     if (child1_pid == 0) {
+        // Child
         command_t *command = active_process_group->commands[0]; 
+        
         handle_file_redirections(command);
 
         char **command_arguments = command->whitespace_tokenized_command;
-
         execvp(command_arguments[0], command_arguments);
     }    
     else {
@@ -93,7 +94,7 @@ void handle_single_command(yash_shell_t *yash) {
             // Foreground job
             yash->fg_job = active_process_group; 
 
-            // Wait for the foreground job to complete.
+            // Wait for the foreground job to complete (unless Ctrl-C or Ctrl-Z is sent).
             while (waitpid(child1_pid, &status, 0) != child1_pid) {
                 bool signal_received = false;
 

@@ -49,11 +49,7 @@ int main() {
     bool is_signal_input;
 
     // Initialize yash shell
-    struct yash_shell_t yash;
-    yash.process_id = getpid();
-    yash.active_process_group = NULL;
-    yash.fg_job = NULL;
-    yash.bg_jobs_linked_list = create_bg_jobs_linked_list(); 
+    yash_shell_t *yash = create_yash_shell();
 
     // Initialize signals
     if (signal(SIGINT, sig_handler) == SIG_ERR) {
@@ -80,7 +76,7 @@ int main() {
         }
         
         // Handle signal interruptions first
-        process_group_t *foreground_job = yash.fg_job; 
+        process_group_t *foreground_job = yash->fg_job; 
 
         is_signal_input = false;
 
@@ -103,7 +99,7 @@ int main() {
             case SIGCHLD:
                 if (foreground_job) {
                     destroy_process_group(foreground_job);
-                    yash.fg_job = NULL;
+                    yash->fg_job = NULL;
                 }
                 signal_interrupt = 0;
                 // Don't set "is_signal_input" to true, because this signal is sent naturally
@@ -118,7 +114,7 @@ int main() {
         char *eof_checker = fgets(shell_input, MAX_CHARACTER_LIMIT, stdin);
 
         if (!eof_checker) {
-            // Ctrl + D to fgets() returns NULL, so check for it to know when to exit yash.
+            // Ctrl + D to fgets() returns NULL, so check for it to know when to exit yash->
             exit(EXIT_SUCCESS);
         }
 
@@ -130,10 +126,10 @@ int main() {
                 continue;
             }
             else {
-                bool invoke_execute_input = parse_input(shell_input, &yash);
+                bool invoke_execute_input = parse_input(shell_input, yash);
 
                 if (invoke_execute_input) {
-                    execute_input(&yash);
+                    execute_input(yash);
                 } 
             }
         } 

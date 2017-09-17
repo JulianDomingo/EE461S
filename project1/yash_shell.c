@@ -7,6 +7,24 @@
 #include "process_group.h"
 #include "yash_shell.h"
 
+#include <stdio.h>
+#include <sys/types.h>
+#include <unistd.h>
+
+/*
+ * Creates a new yash shell.
+ */
+yash_shell_t *create_yash_shell() {
+    yash_shell_t *yash = malloc(sizeof(yash_shell_t));
+
+    yash->process_id = getpid();
+    yash->active_process_group = NULL;
+    yash->fg_job = NULL;
+    yash->bg_jobs_linked_list = create_bg_jobs_linked_list(); 
+
+    return yash;
+}
+
 /*
  * Moves the foreground job to the background then clears the old, duplicate entry.
  * The new process group is inserted from the front of the list.
