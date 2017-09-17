@@ -95,7 +95,58 @@ void handle_single_command(yash_shell_t *yash) {
 
             // Wait for the foreground job to complete.
             while (waitpid(child1_pid, &status, 0) != child1_pid) {
-                // TODO: use same code inside handle_double_commmand() for this while loop in common function 
+                bool signal_received = false;
+
+                // Wait for the foreground job to complete.
+                while (waitpid(child1_pid, &status, 0) != child1_pid) {
+                    // 'errno' is set to 'EINTR' when 'WNOHANG' isn't passed to waitpid() and an "unblocked" signal or 'SIGCHLD' was caught.
+                    if (errno == EINTR) {
+                        switch (signal_interrupt) {
+                            case SIGINT:
+                                printf("Received interrupting Ctrl-C!\n");
+                                signal_received = true;
+                                killpg(active_process_group->process_group_id, SIGINT);                                
+                    
+                                remove_linked_list_node(active_process_group, yash->bg_jobs_linked_list);
+                                signal_interrupt = 0;
+
+                                // Terminate this child (which will send SIGCHLD to the parent process)
+                                exit(EXIT_SUCCESS);
+
+                            case SIGTSTP:
+                                // Suspend foreground job and move it to the background
+                                printf("Received interrupting Ctrl-Z!\n");
+                                signal_received = true;
+                                
+                                killpg(active_process_group->process_group_id, SIGTSTP);                                
+                                move_job_to_bg(active_process_group, yash->bg_jobs_linked_list);
+                                
+                                printf("[%d] + %s    %s\n", 
+                                        yash->bg_jobs_linked_list->size,
+                                        "Stopped", 
+                                        active_process_group->full_command);
+
+                                signal_interrupt = 0;
+                                break;
+
+                            case SIGCONT:
+                                printf("Received continuation signal!\n");
+                                // Keep waitpid() blocking until the newly unsuspended job finishes
+                                killpg(active_process_group->process_group_id, SIGCONT);                                
+                                signal_interrupt = 0;
+                                break;
+                            
+                            default:
+                                // Do nothing if no signal was received.
+                                break;
+                        }                          
+                    } 
+
+                    if (signal_received) {
+                        // Stop blocking if termination / suspension signal is received
+                        break;
+                    }
+                }
             }
             
             // Delay of a tenth of a second ensuring any output to STDOUT is seen before the next '#' prompt.
@@ -164,7 +215,7 @@ void handle_double_commmand(yash_shell_t *yash) {
 
                 // Wait for the foreground job to complete.
                 while (waitpid(child1_pid, &status, 0) != child1_pid) {
-                    // 'errno' is set to 'EINTR' when 'WNOHANG' isn't passed to waitpid() and an unblocked signal or 'SIGCHLD' was caught.
+                    // 'errno' is set to 'EINTR' when 'WNOHANG' isn't passed to waitpid() and an "unblocked" signal or 'SIGCHLD' was caught.
                     if (errno == EINTR) {
                         switch (signal_interrupt) {
                             case SIGINT:
@@ -179,6 +230,7 @@ void handle_double_commmand(yash_shell_t *yash) {
                                 exit(EXIT_SUCCESS);
 
                             case SIGTSTP:
+                                // Suspend foreground job and move it to the background
                                 printf("Received interrupting Ctrl-Z!\n");
                                 signal_received = true;
                                 
@@ -189,12 +241,13 @@ void handle_double_commmand(yash_shell_t *yash) {
                                         yash->bg_jobs_linked_list->size,
                                         "Stopped", 
                                         active_process_group->full_command);
+
                                 signal_interrupt = 0;
                                 break;
 
                             case SIGCONT:
                                 printf("Received continuation signal!\n");
-                                // Don't break from waitpid() block, as yash needs to wait for foreground jobs to terminate
+                                // Keep waitpid() blocking until the newly unsuspended job finishes
                                 killpg(active_process_group->process_group_id, SIGCONT);                                
                                 signal_interrupt = 0;
                                 break;

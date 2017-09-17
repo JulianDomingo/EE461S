@@ -112,6 +112,8 @@ bool parse_input(char *shell_input, yash_shell_t *yash) {
                                 runner->process_group->full_command);
 
                         job_number++;
+                        
+                        runner = runner->previous;
                     }
                 }    
             }

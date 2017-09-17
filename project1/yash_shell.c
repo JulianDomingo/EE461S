@@ -14,6 +14,7 @@
 void move_job_to_bg(process_group_t *process_group, bg_jobs_linked_list_t *linked_list)  {
     process_group->process_status = STOPPED;
 
+    // Wrap process group in a node structure.
     bg_jobs_linked_list_node_t *new_node = create_linked_list_node(process_group);
 
     if (linked_list->pointer_to_head->next) {
@@ -22,7 +23,7 @@ void move_job_to_bg(process_group_t *process_group, bg_jobs_linked_list_t *linke
         linked_list->pointer_to_head->next->previous = new_node;
     }
     else {
-        // First node in linked_list
+        // Stack is empty 
         linked_list->pointer_to_tail->previous = new_node;  
         new_node->next = linked_list->pointer_to_tail;
     }    
@@ -44,7 +45,13 @@ void move_job_to_fg(yash_shell_t *yash) {
         process_group_t *most_recent_process_group_in_bg = yash->bg_jobs_linked_list->pointer_to_head->next->process_group; 
         remove_linked_list_node(most_recent_process_group_in_bg, yash->bg_jobs_linked_list); 
 
+        // If the most recent background job is stopped, ensure its status is set to running.
+        if (most_recent_process_group_in_bg->process_status != RUNNING) {
+            most_recent_process_group_in_bg->process_status = RUNNING;
+        }
+
         yash->fg_job = most_recent_process_group_in_bg;
+
         yash->bg_jobs_linked_list->size--;
     } 
 } 
