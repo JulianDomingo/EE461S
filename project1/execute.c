@@ -96,64 +96,38 @@ void handle_single_command(yash_shell_t *yash) {
             // Foreground job
             yash->fg_job = active_process_group; 
 
+            int child_processes_finished = 0;
+
             // Wait for the foreground job to complete (unless Ctrl-C or Ctrl-Z is sent).
-            while (waitpid(child1_pid, &status, 0) != child1_pid) {
-                bool signal_received = false;
+            while (child_processes_finished < 1) {
+                // '-1' indicates wait for any child process. 
+                pid_t pid = waitpid(-1, &status, WUNTRACED | WCONTINUED);
+            
+                if (pid == -1) {
+                    perror("waitpid() error.");
+                    exit(EXIT_FAILURE);
+                }
 
-                // Wait for the foreground job to complete.
-                while (waitpid(child1_pid, &status, 0) != child1_pid) {
-                    // 'errno' is set to 'EINTR' when 'WNOHANG' isn't passed to waitpid() and an "unblocked" signal or 'SIGCHLD' was caught.
-                    if (errno == EINTR) {
-                        switch (signal_interrupt) {
-                            case SIGINT:
-                                printf("Received interrupting Ctrl-C!\n");
-                                signal_received = true;
-                                killpg(active_process_group->process_group_id, SIGINT);                                
-                    
-                                remove_linked_list_node(active_process_group, yash->bg_jobs_linked_list);
-                                signal_interrupt = 0;
-
-                                // Terminate this child (which will send SIGCHLD to the parent process)
-                                exit(EXIT_SUCCESS);
-
-                            case SIGTSTP:
-                                // Suspend foreground job and move it to the background
-                                printf("Received interrupting Ctrl-Z!\n");
-                                signal_received = true;
-                                
-                                killpg(active_process_group->process_group_id, SIGTSTP);                                
-                            
-                                active_process_group->process_status = STOPPED;
-                                move_job_to_bg(active_process_group, yash->bg_jobs_linked_list);
-                                
-                                printf("[%d] + %s    %s\n", 
-                                        yash->bg_jobs_linked_list->size,
-                                        "Stopped", 
-                                        active_process_group->full_command);
-
-                                signal_interrupt = 0;
-                                break;
-
-                            case SIGCONT:
-                                printf("Received continuation signal!\n");
-                                // Keep waitpid() blocking until the newly unsuspended job finishes
-                                killpg(active_process_group->process_group_id, SIGCONT);                                
-                                signal_interrupt = 0;
-                                break;
-                            
-                            default:
-                                // Do nothing if no signal was received.
-                                break;
-                        }                          
-                    } 
-
-                    if (signal_received) {
-                        // Stop blocking if termination / suspension signal is received
-                        break;
-                    }
+                if (WIFEXITED(status)) {
+                    // Natural process termination
+                    child_processes_finished++;
+                }
+                else if (WIFSIGNALED(status)) {
+                    // SIGINT 
+                    child_processes_finished++;
+                } 
+                else if (WIFSTOPPED(status)) {
+                    // SIGTSTP  
+                    active_process_group->process_status = STOPPED;
+                    move_job_to_bg(active_process_group, yash->bg_jobs_linked_list);
+                
+                    printf("[%d] + %s    %s\n", 
+                            yash->bg_jobs_linked_list->size,
+                            "Stopped", 
+                            active_process_group->full_command);
                 }
             }
-            
+
             // Delay of a tenth of a second ensuring any output to STDOUT is seen before the next '#' prompt.
             usleep(100000);
         }
@@ -214,56 +188,35 @@ void handle_double_commmand(yash_shell_t *yash) {
                 // Foreground job
                 yash->fg_job = active_process_group; 
 
-                bool signal_received = false;
+                int child_processes_finished = 0;
 
-                // Wait for the foreground job to complete.
-                while (waitpid(child1_pid, &status, 0) != child1_pid) {
-                    // 'errno' is set to 'EINTR' when 'WNOHANG' isn't passed to waitpid() and an "unblocked" signal or 'SIGCHLD' was caught.
-                    if (errno == EINTR) {
-                        switch (signal_interrupt) {
-                            case SIGINT:
-                                printf("Received interrupting Ctrl-C!\n");
-                                signal_received = true;
-                                killpg(active_process_group->process_group_id, SIGINT);                                
-                    
-                                remove_linked_list_node(active_process_group, yash->bg_jobs_linked_list);
-                                signal_interrupt = 0;
+                // Wait for the foreground job to complete (unless Ctrl-C or Ctrl-Z is sent).
+                while (child_processes_finished < 2) {
+                    // '-1' indicates wait for any child process. 
+                    pid_t pid = waitpid(-1, &status, WUNTRACED | WCONTINUED);
+                
+                    if (pid == -1) {
+                        perror("waitpid() error.");
+                        exit(EXIT_FAILURE);
+                    }
 
-                                // Terminate this child (which will send SIGCHLD to the parent process)
-                                exit(EXIT_SUCCESS);
-
-                            case SIGTSTP:
-                                // Suspend foreground job and move it to the background
-                                printf("Received interrupting Ctrl-Z!\n");
-                                signal_received = true;
-                                
-                                killpg(active_process_group->process_group_id, SIGTSTP);                                
-                                move_job_to_bg(active_process_group, yash->bg_jobs_linked_list);
-                                
-                                printf("[%d] + %s    %s\n", 
-                                        yash->bg_jobs_linked_list->size,
-                                        "Stopped", 
-                                        active_process_group->full_command);
-
-                                signal_interrupt = 0;
-                                break;
-
-                            case SIGCONT:
-                                printf("Received continuation signal!\n");
-                                // Keep waitpid() blocking until the newly unsuspended job finishes
-                                killpg(active_process_group->process_group_id, SIGCONT);                                
-                                signal_interrupt = 0;
-                                break;
-                            
-                            default:
-                                // Do nothing if no signal was received.
-                                break;
-                        }                          
+                    if (WIFEXITED(status)) {
+                        // Natural process termination
+                        child_processes_finished++;
+                    }
+                    else if (WIFSIGNALED(status)) {
+                        // SIGINT 
+                        child_processes_finished++;
                     } 
-
-                    if (signal_received) {
-                        // Stop blocking if termination / suspension signal is received
-                        break;
+                    else if (WIFSTOPPED(status)) {
+                        // SIGTSTP  
+                        active_process_group->process_status = STOPPED;
+                        move_job_to_bg(active_process_group, yash->bg_jobs_linked_list);
+                    
+                        printf("[%d] + %s    %s\n", 
+                                yash->bg_jobs_linked_list->size,
+                                "Stopped", 
+                                active_process_group->full_command);
                     }
                 }
 

@@ -126,6 +126,7 @@ int main() {
                 continue;
             }
             else {
+                check_for_bg_job_status_updates(yash->bg_jobs_linked_list);
                 bool invoke_execute_input = parse_input(shell_input, yash);
 
                 if (invoke_execute_input) {

@@ -71,3 +71,20 @@ void move_job_to_fg(yash_shell_t *yash) {
         yash->bg_jobs_linked_list->size--;
     } 
 } 
+                
+void check_for_bg_job_status_updates(bg_jobs_linked_list_t *linked_list) {
+    if (linked_list->size == 0) {
+        return;
+    }
+
+    // Iterate through the background jobs list, calling waitpid() to extract potentially updated process statuses. 
+    bg_jobs_linked_list_node_t *runner = linked_list->pointer_to_tail->previous;
+
+    while (runner && !runner->is_head_or_tail) {
+        // WNOHANG so waitpid() doesn't block if no child has exited.
+        if (waitpid(runner->process_group->process_group_id, NULL, WNOHANG)) {
+            // TODO: print out job as "Done" (with additional info required)
+            // TODO: destroy the process group from the bg linked list. 
+        }                        
+    }
+}
