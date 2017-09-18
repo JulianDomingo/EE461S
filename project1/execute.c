@@ -88,6 +88,8 @@ void handle_single_command(yash_shell_t *yash) {
     }    
     else {
         // Parent
+
+        // Unless a Ctrl-Z (suspension) is received, the job should be running (termination completely destroys the job, so status is irrelevant). 
         active_process_group->process_status = RUNNING;
 
         if (active_process_group->is_foreground_job) {
@@ -120,6 +122,8 @@ void handle_single_command(yash_shell_t *yash) {
                                 signal_received = true;
                                 
                                 killpg(active_process_group->process_group_id, SIGTSTP);                                
+                            
+                                active_process_group->process_status = STOPPED;
                                 move_job_to_bg(active_process_group, yash->bg_jobs_linked_list);
                                 
                                 printf("[%d] + %s    %s\n", 
@@ -154,10 +158,8 @@ void handle_single_command(yash_shell_t *yash) {
             usleep(100000);
         }
         else {
-            printf("Background job detected!\n");
             // Background job
             move_job_to_bg(active_process_group, yash->bg_jobs_linked_list);
-
             // Don't wait for the background job to complete.
             waitpid(child1_pid, &status, WNOHANG); 
         }

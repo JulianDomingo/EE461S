@@ -30,8 +30,6 @@ yash_shell_t *create_yash_shell() {
  * The new process group is inserted from the front of the list.
  */
 void move_job_to_bg(process_group_t *process_group, bg_jobs_linked_list_t *linked_list)  {
-    process_group->process_status = STOPPED;
-
     // Wrap process group in a node structure.
     bg_jobs_linked_list_node_t *new_node = create_linked_list_node(process_group);
 
