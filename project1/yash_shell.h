@@ -18,7 +18,8 @@ typedef struct yash_shell_t {
 
 
 yash_shell_t *create_yash_shell();
-void move_job_to_bg(process_group_t *process_group, bg_jobs_linked_list_t *linked_list); 
 void move_job_to_fg(yash_shell_t *yash);
+void move_job_to_bg(process_group_t *process_group, bg_jobs_linked_list_t *linked_list); 
+void check_for_bg_job_status_updates(bg_jobs_linked_list_t *linked_list);
 
 #endif

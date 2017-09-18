@@ -60,9 +60,10 @@ int main(void) {
       close(pipefd[0]); //close the pipe in the parent
       close(pipefd[1]);
       int count = 0;
-      while (count < 2) {
+      while (count < 1) {
 	// Parent's wait processing is based on the sig_ex4.c
-	pid = waitpid(-1, &status, WUNTRACED | WCONTINUED);
+	/*pid = waitpid(-1, &status, WUNTRACED | WCONTINUED);*/
+	pid = waitpid(-pid_ch1, &status, WUNTRACED | WCONTINUED);
 	// wait does not take options:
 	//    waitpid(-1,&status,0) is same as wait(&status)
 	// with no options waitpid wait only for terminated child processes
@@ -75,7 +76,7 @@ int main(void) {
 	}
 	
 	if (WIFEXITED(status)) {
-	  printf("child %d exited, status=%d\n", pid, WEXITSTATUS(status));count++;
+	  printf("child %d exited, status=%d, signal=%d\n", pid, WEXITSTATUS(status), WTERMSIG(status));count++;
 	} else if (WIFSIGNALED(status)) {
 	  printf("child %d killed by signal %d\n", pid, WTERMSIG(status));count++;
 	} else if (WIFSTOPPED(status)) {
@@ -87,6 +88,7 @@ int main(void) {
 	  printf("Continuing %d\n",pid);
 	}
       }
+      printf("About to exit failure!\n");
       exit(1);
     }else {
       //Child 2
@@ -96,7 +98,7 @@ int main(void) {
       dup2(pipefd[0],STDIN_FILENO);
       char *myargs[3];
       myargs[0] = strdup("grep");   // program: "grep" (word count)
-      myargs[1] = strdup("sig_ex3.c");   // argument: "firefox"
+      myargs[1] = strdup("firefox");   // argument: "firefox"
       myargs[2] = NULL;           // marks end of array
       execvp(myargs[0], myargs);  // runs word count
     }
@@ -107,7 +109,7 @@ int main(void) {
     close(pipefd[0]); // close the read end
     dup2(pipefd[1],STDOUT_FILENO);
     char *myargs[2];
-    myargs[0] = strdup("ls");   // program: "top" (writes to stdout which is now pipe)
+    myargs[0] = strdup("top");   // program: "top" (writes to stdout which is now pipe)
     myargs[1] = NULL;           
     execvp(myargs[0], myargs);  // runs top
   }

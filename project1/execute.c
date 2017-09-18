@@ -121,7 +121,7 @@ void handle_single_command(yash_shell_t *yash) {
                     active_process_group->process_status = STOPPED;
                     move_job_to_bg(active_process_group, yash->bg_jobs_linked_list);
                 
-                    printf("[%d] + %s    %s\n", 
+                    printf("[%d]+  %s            %s\n", 
                             yash->bg_jobs_linked_list->size,
                             "Stopped", 
                             active_process_group->full_command);
@@ -213,7 +213,7 @@ void handle_double_commmand(yash_shell_t *yash) {
                         active_process_group->process_status = STOPPED;
                         move_job_to_bg(active_process_group, yash->bg_jobs_linked_list);
                     
-                        printf("[%d] + %s    %s\n", 
+                        printf("[%d]+  %s            %s\n", 
                                 yash->bg_jobs_linked_list->size,
                                 "Stopped", 
                                 active_process_group->full_command);
