@@ -21,6 +21,7 @@ typedef struct process_group_t {
     size_t commands_size;
     enum status process_status; 
     bool is_foreground_job;
+    bool is_suspended;
 } process_group_t;
 
 process_group_t *create_process_group(char *command_string);

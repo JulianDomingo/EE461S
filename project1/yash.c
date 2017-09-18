@@ -97,7 +97,10 @@ int main() {
                 break;
             
             case SIGCHLD:
-                if (foreground_job) {
+                if (foreground_job && !foreground_job->is_suspended) {
+                    // We don't have to worry about leaving heap-allocated jobs in the list if they were suspended, as
+                    // check_for_bg_job_status_updates() will check for updates from those suspended jobs and free them 
+                    // if they have finished after a 'bg' call.
                     destroy_process_group(foreground_job);
                     yash->fg_job = NULL;
                 }

@@ -109,7 +109,7 @@ bool parse_input(char *shell_input, yash_shell_t *yash) {
                     while (runner && !runner->is_head_or_tail) {
                         printf("[%d]%s %s            %s\n", 
                                 job_number, 
-                                (runner->previous) ? "-" : "+",  
+                                (runner->previous->is_head_or_tail) ? "+" : "-", // The most recent background job has '+'
                                 (runner->process_group->process_status == RUNNING) ? "Running" : "Stopped",
                                 runner->process_group->full_command);
 

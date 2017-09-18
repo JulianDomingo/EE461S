@@ -50,6 +50,7 @@ process_group_t *create_process_group(char *full_command) {
     // The process group is automatically foreground unless specified by '&' or explicitly 
     // placed into the background (which are both handled in the parse.c file).
     process_group->is_foreground_job = true;
+    process_group->is_suspended = true;
 
     return process_group;
 }
