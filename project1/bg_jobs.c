@@ -44,7 +44,7 @@ void remove_linked_list_node(process_group_t *process_group_to_remove, bg_jobs_l
 
         // First free the heap-stored members of process group before freeing linked_list node itself.
         destroy_process_group(temp_pointer->process_group);
-        free(temp_pointer); 
+        free(temp_pointer);
     }
     else {
         // Process group to remove is not the most recent background job
@@ -60,12 +60,14 @@ void remove_linked_list_node(process_group_t *process_group_to_remove, bg_jobs_l
 
                 // First free the heap-stored members of process group before freeing linked_list node itself.
                 destroy_process_group(temp_pointer->process_group);
-                free(temp_pointer); 
+                free(temp_pointer);
             }
 
             runner = runner->next;
         } 
     }
+
+    linked_list->size--;
 }
 
 /*

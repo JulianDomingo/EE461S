@@ -16,6 +16,8 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include <unistd.h>
 
 /*
@@ -133,16 +135,15 @@ bool parse_input(char *shell_input, yash_shell_t *yash) {
             // Retrieve file name.
             token = strtok(NULL, delimiter);
     
-            FILE *file_pointer = fopen(token, "r"); 
+            int file_descriptor_index = open(token, O_RDONLY); 
             
             // Check that the file exists.
-            if (file_pointer) {
+            if (file_descriptor_index != -1) {
                 new_command->redirect_stdin_filename = strdup(token);
                 new_command->contains_redirect_stdin = true;
-                fclose(file_pointer);
+                close(file_descriptor_index);
             }
             else {
-                fclose(file_pointer);
                 printf("yash: %s: No such file or directory\n", token); 
                 
                 destroy_command(new_command);

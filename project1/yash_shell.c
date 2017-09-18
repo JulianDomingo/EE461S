@@ -95,13 +95,11 @@ void check_for_bg_job_status_updates(bg_jobs_linked_list_t *linked_list) {
                     (runner->previous->is_head_or_tail) ? "+" : "-",
                     runner->process_group->full_command);
 
-            // TODO: fix error caused by concurrent removal of node + traversing linked list
-            remove_linked_list_node(runner->process_group, linked_list); 
+            // Traverse the next node before updating the linked list to avoid segmentation fault
+            remove_linked_list_node(runner->process_group, linked_list);         
         }                        
 
-        printf("About to update runner!\n");
         runner = runner->previous;
-
         job_number++;
     }
 }
