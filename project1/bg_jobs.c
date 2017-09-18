@@ -31,6 +31,8 @@ bg_jobs_linked_list_node_t *create_linked_list_node(process_group_t *process_gro
 void remove_linked_list_node(process_group_t *process_group_to_remove, bg_jobs_linked_list_t *linked_list) {
     if (linked_list->size == 0) { return; }
 
+    bg_jobs_linked_list_node_t *temp_pointer;
+
     bg_jobs_linked_list_node_t *runner = linked_list->pointer_to_head->next;
     while (!runner->is_head_or_tail) {
         if (runner->process_group == process_group_to_remove) {

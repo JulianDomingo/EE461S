@@ -170,10 +170,14 @@ void handle_double_commmand(yash_shell_t *yash) {
         // Child 1 (group leader)
         pid_t session_id = setsid();
 
+        command_t *command1 = active_process_group->commands[0];
+
+        handle_file_redirections(command1);
+
         close(pipefd[0]);
         dup2(pipefd[1], STDOUT_FILENO);
 
-        char **first_command_arguments = active_process_group->commands[0]->whitespace_tokenized_command;
+        char **first_command_arguments = command1->whitespace_tokenized_command;
         execvp(first_command_arguments[0], first_command_arguments);
     }
     else {
@@ -238,10 +242,14 @@ void handle_double_commmand(yash_shell_t *yash) {
             // Child 2
             int setpgid_success = setpgid(0, child1_pid);   
 
+            command_t *command2 = active_process_group->commands[1];
+
+            handle_file_redirections(command2);
+
             close(pipefd[1]);  
             dup2(pipefd[0], STDIN_FILENO);
 
-            char **second_command_arguments = active_process_group->commands[1]->whitespace_tokenized_command;
+            char **second_command_arguments = command2->whitespace_tokenized_command;
             execvp(second_command_arguments[0], second_command_arguments);
         }
     }
