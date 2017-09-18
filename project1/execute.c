@@ -125,6 +125,9 @@ void handle_single_command(yash_shell_t *yash) {
                             yash->bg_jobs_linked_list->size,
                             "Stopped", 
                             active_process_group->full_command);
+
+                    // Stop waiting, since the job is now in the background.
+                    break;
                 }
             }
 
@@ -233,7 +236,7 @@ void handle_double_commmand(yash_shell_t *yash) {
         }
         else {
             // Child 2
-            setpgid(0, child1_pid);   
+            int setpgid_success = setpgid(0, child1_pid);   
 
             close(pipefd[1]);  
             dup2(pipefd[0], STDIN_FILENO);

@@ -105,11 +105,11 @@ bool parse_input(char *shell_input, yash_shell_t *yash) {
                     bg_jobs_linked_list_node_t *runner = yash->bg_jobs_linked_list->pointer_to_tail->previous;
 
                     int job_number = 1; 
-      
+                    
                     while (runner && !runner->is_head_or_tail) {
                         printf("[%d]%s %s            %s\n", 
                                 job_number, 
-                                (runner->previous) ? "+" : "-",  
+                                (runner->previous) ? "-" : "+",  
                                 (runner->process_group->process_status == RUNNING) ? "Running" : "Stopped",
                                 runner->process_group->full_command);
 

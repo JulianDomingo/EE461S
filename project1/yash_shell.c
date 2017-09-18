@@ -75,7 +75,8 @@ void move_job_to_fg(yash_shell_t *yash) {
 
 /*
  * Checks for updated statuses from background jobs. If the background job finished,
- * yash prints out relevant information about the finished job to STDOUT.  
+ * yash prints out relevant information about the finished job to STDOUT in the same
+ * manner as bash.
  */
 void check_for_bg_job_status_updates(bg_jobs_linked_list_t *linked_list) {
     if (linked_list->size == 0) {
