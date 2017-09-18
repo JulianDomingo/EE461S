@@ -120,13 +120,15 @@ int main() {
 
         shell_input[strlen(shell_input) - 1] = '\0';
 
+        // This notifies yash of finished jobs which were running in the background.
+        check_for_bg_job_status_updates(yash->bg_jobs_linked_list);
+
         if (!is_signal_input) {
             // check if no command entered
             if (strlen(trim(shell_input)) == 0) { 
                 continue;
             }
             else {
-                check_for_bg_job_status_updates(yash->bg_jobs_linked_list);
                 bool invoke_execute_input = parse_input(shell_input, yash);
 
                 if (invoke_execute_input) {

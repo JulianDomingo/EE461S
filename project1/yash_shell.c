@@ -72,7 +72,11 @@ void move_job_to_fg(yash_shell_t *yash) {
         yash->bg_jobs_linked_list->size--;
     } 
 } 
-                
+
+/*
+ * Checks for updated statuses from background jobs. If the background job finished,
+ * yash prints out relevant information about the finished job to STDOUT.  
+ */
 void check_for_bg_job_status_updates(bg_jobs_linked_list_t *linked_list) {
     if (linked_list->size == 0) {
         return;
@@ -91,7 +95,13 @@ void check_for_bg_job_status_updates(bg_jobs_linked_list_t *linked_list) {
                     (runner->previous->is_head_or_tail) ? "+" : "-",
                     runner->process_group->full_command);
 
+            // TODO: fix error caused by concurrent removal of node + traversing linked list
             remove_linked_list_node(runner->process_group, linked_list); 
         }                        
+
+        printf("About to update runner!\n");
+        runner = runner->previous;
+
+        job_number++;
     }
 }
