@@ -168,10 +168,13 @@ void handle_double_commmand(yash_shell_t *yash) {
         // Child 1 (group leader)
         /*setsid();*/
         /*setpgrp();*/
-        tcsetpgrp(STDIN_FILENO, getpgrp());
-        printf("Child 1's PGRP: %d\n", getpgrp());
+        tcsetpgrp(open("/dev/tty"), getpgrp()); 
+
+        printf("Child 1's PGID: %d\n", getpgrp());
+        printf("Child 1's result of getpid(): %d\n", getpid());
         
-        active_process_group->process_group_id = getpid();
+        // active_process_group->process_group_id = getpid();
+        active_process_group->process_group_id = getpgrp();
 
         command_t *command1 = active_process_group->commands[0];
 
@@ -185,15 +188,12 @@ void handle_double_commmand(yash_shell_t *yash) {
     }
     else {
         // Parent
-        printf("Child 1 PID: %d\n", child1_pid);
-
-        active_process_group->process_group_id = child1_pid;
+        /*active_process_group->process_group_id = child1_pid;*/
+        active_process_group->process_group_id = tcgetpgrp(STDIN_FILENO);
 
         pid_t child2_pid = fork();
 
         if (child2_pid > 0) {
-            printf("Child 2 PID: %d\n", child2_pid);
-
             // Parent
             close(pipefd[0]);
             close(pipefd[1]);
@@ -209,15 +209,17 @@ void handle_double_commmand(yash_shell_t *yash) {
                 // Wait for the foreground job to complete (unless Ctrl-C or Ctrl-Z is sent).
                 while (child_processes_finished < 2) {
                     // '-1' indicates wait for any child process. 
-                    pid_t pid = waitpid(-1, &status, WUNTRACED | WCONTINUED);
+                    // TODO: call waitpid() with PGID of foreground job, not -1.
+                    /*pid_t pid = waitpid(-1, &status, WUNTRACED | WCONTINUED);*/
+                    
+                    // Wait for any child process whose process group ID is equal to "active_process_group->process_group_id"
+                    pid_t pid = waitpid(active_process_group->process_group_id, &status, WUNTRACED | WCONTINUED);
                 
                     if (pid == -1) {
                         perror("waitpid() error.");
                         exit(EXIT_FAILURE);
                     }
                     
-                    printf("Received status update from PID: %d\n", pid);
-
                     if (WIFEXITED(status)) {
                         // Natural process termination
                         child_processes_finished++;
@@ -227,6 +229,7 @@ void handle_double_commmand(yash_shell_t *yash) {
                         child_processes_finished++;
                     } 
                     else if (WIFSTOPPED(status)) {
+                        printf("Suspended process_group with PID: %d\n", active_process_group->process_group_id);
                         // SIGTSTP  
                         active_process_group->process_status = STOPPED;
                         move_job_to_bg(active_process_group, yash->bg_jobs_linked_list);
@@ -255,7 +258,8 @@ void handle_double_commmand(yash_shell_t *yash) {
         else {
             // Child 2
             setpgid(0, child1_pid);
-            printf("Child 2's PGRP: %d\n", getpgrp());
+            printf("Child 2's PGID: %d\n", getpgrp());
+            printf("Child 2's result of getpid(): %d\n", getpid());
 
             command_t *command2 = active_process_group->commands[1];
 
@@ -278,13 +282,16 @@ void execute_input(yash_shell_t *yash) {
 
     // Initialize signals
     if (signal(SIGINT, sig_handler) == SIG_ERR) {
-        printf("signal(SIGINT) error");
+        perror("signal(SIGINT) error");
     }
     if (signal(SIGTSTP, sig_handler) == SIG_ERR) {
-        printf("signal(SIGTSTP) error");
+        perror("signal(SIGTSTP) error");
     }
     if (signal(SIGCONT, sig_handler) == SIG_ERR) {
-        printf("signal(SIGCONT) error");
+        perror("signal(SIGCONT) error");
+    }
+    if (signal(SIGTTOU, SIG_IGN) == SIG_ERR) {
+        perror("signal(SIGTTOU) error");
     }
 
     if (active_process_group->commands_size == 1) {

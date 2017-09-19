@@ -64,14 +64,21 @@ bool parse_input(char *shell_input, yash_shell_t *yash) {
                 }
                 else {
                     process_group_t *most_recent_process_group_in_bg = most_recent_bg_process_group_node->process_group;
+                    printf("Retrieved background process group with PGID: %d\n", most_recent_process_group_in_bg->process_group_id);
                
                     if (most_recent_process_group_in_bg->commands_size == 1) {
+                        printf("Sending continuation to job with 1 commands.\n");
                         // Don't invoke killpg() if there is no pipe (it would fail)
-                        kill(most_recent_process_group_in_bg->process_group_id, SIGCONT);
+                        if (kill(most_recent_process_group_in_bg->process_group_id, SIGCONT) == - 1) {
+                            perror("kill");
+                        }
                     }
                     else {
-                        // Process group exists. 
-                        killpg(most_recent_process_group_in_bg->process_group_id, SIGCONT);
+                        printf("Sending continuation to job with 2 commands.\n");
+                        // There are two commands in the process group, so killpg() must be used 
+                        if (killpg(most_recent_process_group_in_bg->process_group_id, SIGCONT) == -1) {
+                            perror("killpg");
+                        }
                     }
 
                     printf("%s\n", most_recent_process_group_in_bg->full_command);
@@ -97,11 +104,17 @@ bool parse_input(char *shell_input, yash_shell_t *yash) {
                     else {
                         // Job is stopped, so continue it in the background
                 
-                        // Since a process group wasn't truly created (it's just one process, we use kill() INSTEAD of killpg())
-                        int kill_success = kill(most_recent_process_group_in_bg->process_group_id, SIGCONT);
-
-                        if (kill_success == -1) {
-                            perror("kill");
+                        if (most_recent_process_group_in_bg->commands_size == 1) {
+                            // Don't invoke killpg() if there is no pipe (it would fail)
+                            if (kill(most_recent_process_group_in_bg->process_group_id, SIGCONT) == -1) {
+                                perror("kill");
+                            }
+                        }
+                        else {
+                            // There are two commands in the process group, so killpg() must be used 
+                            if (killpg(most_recent_process_group_in_bg->process_group_id, SIGCONT) == -1) {
+                                perror("killpg");
+                            }
                         }
 
                         most_recent_process_group_in_bg->process_status = RUNNING;
