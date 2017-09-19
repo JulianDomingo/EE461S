@@ -56,14 +56,12 @@ void handle_file_redirections(command_t *command) {
         close(file_descriptor);
     }
     if (command->contains_redirect_stdout) {
-        /*file_descriptor = open(command->redirect_stdout_filename, O_RDWR | O_CREAT, S_IRWXU); */
-
-        file_descriptor = open(command->redirect_stdout_filename, O_WRONLY | O_CREAT | O_TRUNC, 644); 
+        file_descriptor = open(command->redirect_stdout_filename, O_CREAT|O_RDWR|O_TRUNC, 0644); 
         dup2(file_descriptor, STDOUT_FILENO);
         close(file_descriptor);
     }
     if (command->contains_redirect_stderr) {
-        file_descriptor = open(command->redirect_stderr_filename, O_RDWR | O_CREAT, S_IRWXU); 
+        file_descriptor = open(command->redirect_stderr_filename, O_CREAT|O_RDWR|O_TRUNC, 0644); 
         dup2(file_descriptor, STDERR_FILENO);
         close(file_descriptor);
     }
@@ -168,9 +166,12 @@ void handle_double_commmand(yash_shell_t *yash) {
 
     if (child1_pid == 0) {
         // Child 1 (group leader)
-        setsid();
+        // setsid();
+        pid_t pgrp_id = setpgrp();
 
         active_process_group->process_group_id = getpid();
+
+        printf("Process group set to the PID of child1: '%d', '%d'\n", getpgrp(), active_process_group->process_group_id);
 
         command_t *command1 = active_process_group->commands[0];
 
@@ -248,6 +249,10 @@ void handle_double_commmand(yash_shell_t *yash) {
         else {
             // Child 2
             int setpgid_success = setpgid(0, child1_pid);   
+
+            if (setpgid_success == 0) {
+                printf("Child 2 joined group leader with pgroup ID: '%d'\n", child1_pid);
+            }
 
             command_t *command2 = active_process_group->commands[1];
 
