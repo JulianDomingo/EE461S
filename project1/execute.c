@@ -168,7 +168,7 @@ void handle_double_commmand(yash_shell_t *yash) {
         // Child 1 (group leader)
         /*setsid();*/
         /*setpgrp();*/
-        tcsetpgrp(STDOUT_FILENO, getpgrp());
+        tcsetpgrp(STDIN_FILENO, getpgrp());
         printf("Child 1's PGRP: %d\n", getpgrp());
         
         active_process_group->process_group_id = getpid();

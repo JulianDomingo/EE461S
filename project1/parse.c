@@ -65,7 +65,15 @@ bool parse_input(char *shell_input, yash_shell_t *yash) {
                 else {
                     process_group_t *most_recent_process_group_in_bg = most_recent_bg_process_group_node->process_group;
                
-                    killpg(most_recent_process_group_in_bg->process_group_id, SIGCONT);
+                    if (most_recent_process_group_in_bg->commands_size == 1) {
+                        // Don't invoke killpg() if there is no pipe (it would fail)
+                        kill(most_recent_process_group_in_bg->process_group_id, SIGCONT);
+                    }
+                    else {
+                        // Process group exists. 
+                        killpg(most_recent_process_group_in_bg->process_group_id, SIGCONT);
+                    }
+
                     printf("%s\n", most_recent_process_group_in_bg->full_command);
                     move_job_to_fg(yash);
                     most_recent_process_group_in_bg->process_status = RUNNING;
