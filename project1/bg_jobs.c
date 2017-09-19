@@ -65,8 +65,10 @@ bg_jobs_linked_list_t *create_bg_jobs_linked_list() {
     bg_jobs_linked_list->pointer_to_tail = malloc(sizeof(bg_jobs_linked_list_node_t));
     bg_jobs_linked_list->pointer_to_head->is_head_or_tail = true;
     bg_jobs_linked_list->pointer_to_tail->is_head_or_tail = true;
-    bg_jobs_linked_list->pointer_to_head->next = NULL;
+    bg_jobs_linked_list->pointer_to_head->next = bg_jobs_linked_list->pointer_to_tail;
+    bg_jobs_linked_list->pointer_to_tail->previous = bg_jobs_linked_list->pointer_to_head;
     bg_jobs_linked_list->pointer_to_head->previous = NULL;
+    bg_jobs_linked_list->pointer_to_tail->next = NULL;
 
     return bg_jobs_linked_list;
 }
