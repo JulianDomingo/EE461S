@@ -79,10 +79,8 @@ void handle_single_command(yash_shell_t *yash) {
 
     if (child1_pid == 0) {
         // Child
-
-        // Even for just one command, I still make a process group to adhere to the requirements of my linked list data
-        // structure when storing new background jobs.
-        pid_t process_group_id = setpgrp();
+        active_process_group->process_group_id = getpid();
+        
         command_t *command = active_process_group->commands[0]; 
         
         handle_file_redirections(command);
@@ -92,6 +90,7 @@ void handle_single_command(yash_shell_t *yash) {
     }    
     else {
         // Parent
+        active_process_group->process_group_id = child1_pid;
 
         // Unless a Ctrl-Z (suspension) is received, the job should be running (termination completely destroys the job, so status is irrelevant). 
         active_process_group->process_status = RUNNING;
@@ -172,7 +171,9 @@ void handle_double_commmand(yash_shell_t *yash) {
 
     if (child1_pid == 0) {
         // Child 1 (group leader)
-        pid_t process_group_id = setpgrp();
+        setsid();
+
+        active_process_group->process_group_id = getpid();
 
         command_t *command1 = active_process_group->commands[0];
 
@@ -212,6 +213,7 @@ void handle_double_commmand(yash_shell_t *yash) {
                     }
 
                     if (WIFEXITED(status)) {
+                        printf("Received termination signal from child process in execute.c\n");
                         // Natural process termination
                         child_processes_finished++;
                     }

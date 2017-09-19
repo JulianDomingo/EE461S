@@ -71,10 +71,7 @@ bool parse_input(char *shell_input, yash_shell_t *yash) {
                     most_recent_process_group_in_bg->process_status = RUNNING;
 
                     // Wait for completion of the process, indicated by the "0" argument.
-                    
-                    printf("Foreground PID: '%d'\n", most_recent_process_group_in_bg->process_group_id);
                     pid_t pid = waitpid(most_recent_process_group_in_bg->process_group_id, &status, 0);
-                    printf("Waited for '%d'\n", pid);
                 }
             }
             else if (strcmp(token, "bg") == 0) {
@@ -91,7 +88,14 @@ bool parse_input(char *shell_input, yash_shell_t *yash) {
                     }
                     else {
                         // Job is stopped, so continue it in the background
-                        killpg(most_recent_process_group_in_bg->process_group_id, SIGCONT);
+                
+                        // Since a process group wasn't truly created (it's just one process, we use kill() INSTEAD of killpg())
+                        int kill_success = kill(most_recent_process_group_in_bg->process_group_id, SIGCONT);
+
+                        if (kill_success == -1) {
+                            perror("kill");
+                        }
+
                         most_recent_process_group_in_bg->process_status = RUNNING;
                         printf("[%d]+ %s\n", 
                                 yash->bg_jobs_linked_list->size, 

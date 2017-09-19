@@ -87,10 +87,11 @@ void check_for_bg_job_status_updates(bg_jobs_linked_list_t *linked_list) {
     bg_jobs_linked_list_node_t *runner = linked_list->pointer_to_tail->previous;
 
     int job_number = 1;
+    int status;
 
     while (runner && !runner->is_head_or_tail) {
         // Don't suspend the invoking process if status is not immediately available for any process within the process group ID specified. 
-        if (waitpid(runner->process_group->process_group_id, NULL, WNOHANG)) {
+        if (waitpid(runner->process_group->process_group_id, &status, WNOHANG)) {
             printf("[%d]%s  Done            %s\n",
                     job_number,
                     (runner->previous->is_head_or_tail) ? "+" : "-",
