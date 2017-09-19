@@ -59,7 +59,7 @@ bool parse_input(char *shell_input, yash_shell_t *yash) {
             if (strcmp(token, "fg") == 0) {
                 bg_jobs_linked_list_node_t *most_recent_bg_process_group_node = yash->bg_jobs_linked_list->pointer_to_head->next;
                 
-                if (!most_recent_bg_process_group_node) {
+                if (most_recent_bg_process_group_node->is_head_or_tail) {
                     printf("yash: fg: current: no such job\n");
                 }
                 else {
@@ -77,7 +77,7 @@ bool parse_input(char *shell_input, yash_shell_t *yash) {
             else if (strcmp(token, "bg") == 0) {
                 bg_jobs_linked_list_node_t *most_recent_bg_process_group_node = yash->bg_jobs_linked_list->pointer_to_head->next;
                 
-                if (!most_recent_bg_process_group_node) {
+                if (most_recent_bg_process_group_node->is_head_or_tail) {
                     printf("yash: bg: current: no such job\n");
                 }
                 else {
