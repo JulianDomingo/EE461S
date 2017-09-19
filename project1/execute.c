@@ -166,8 +166,7 @@ void handle_double_commmand(yash_shell_t *yash) {
 
     if (child1_pid == 0) {
         // Child 1 (group leader)
-        setsid();
-        // pid_t pgrp_id = setpgrp();
+        tcsetpgrp(STDIN_FILENO, getpgrp());
 
         active_process_group->process_group_id = getpid();
 
