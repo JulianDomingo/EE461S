@@ -56,7 +56,9 @@ void handle_file_redirections(command_t *command) {
         close(file_descriptor);
     }
     if (command->contains_redirect_stdout) {
-        file_descriptor = open(command->redirect_stdout_filename, O_RDWR | O_CREAT, S_IRWXU); 
+        /*file_descriptor = open(command->redirect_stdout_filename, O_RDWR | O_CREAT, S_IRWXU); */
+
+        file_descriptor = open(command->redirect_stdout_filename, O_WRONLY | O_CREAT | O_TRUNC, 644); 
         dup2(file_descriptor, STDOUT_FILENO);
         close(file_descriptor);
     }
@@ -162,11 +164,6 @@ void handle_double_commmand(yash_shell_t *yash) {
 
     process_group_t *active_process_group = yash->active_process_group;
 
-    if (active_process_group->commands_size != 2) {
-        perror("Parser did not successfully gather commands.");
-        exit(EXIT_FAILURE);
-    }
-
     pid_t child1_pid = fork();
 
     if (child1_pid == 0) {
@@ -187,6 +184,8 @@ void handle_double_commmand(yash_shell_t *yash) {
     }
     else {
         // Parent
+        active_process_group->process_group_id = child1_pid;
+
         pid_t child2_pid = fork();
 
         if (child2_pid > 0) {
@@ -213,7 +212,6 @@ void handle_double_commmand(yash_shell_t *yash) {
                     }
 
                     if (WIFEXITED(status)) {
-                        printf("Received termination signal from child process in execute.c\n");
                         // Natural process termination
                         child_processes_finished++;
                     }
@@ -230,6 +228,9 @@ void handle_double_commmand(yash_shell_t *yash) {
                                 yash->bg_jobs_linked_list->size,
                                 "Stopped", 
                                 active_process_group->full_command);
+
+                        // Stop waiting, since the job is now in the background.
+                        break;
                     }
                 }
 
