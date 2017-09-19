@@ -53,13 +53,13 @@ int main() {
 
     // Initialize signals
     if (signal(SIGINT, sig_handler) == SIG_ERR) {
-        printf("signal(SIGINT) error");
+        perror("signal(SIGINT) error");
     }
     if (signal(SIGTSTP, sig_handler) == SIG_ERR) {
-        printf("signal(SIGTSTP) error");
+        perror("signal(SIGTSTP) error");
     }
     if (signal(SIGCHLD, sig_handler) == SIG_ERR) {
-        printf("signal(SIGCHLD) error");
+        perror("signal(SIGCHLD) error");
     }
 
     // Handles pipe error

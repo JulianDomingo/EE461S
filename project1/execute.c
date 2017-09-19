@@ -166,8 +166,10 @@ void handle_double_commmand(yash_shell_t *yash) {
 
     if (child1_pid == 0) {
         // Child 1 (group leader)
-        // tcsetpgrp(STDIN_FILENO, getpgrp());
-        setsid();
+        /*setsid();*/
+        /*setpgrp();*/
+        tcsetpgrp(STDOUT_FILENO, getpgrp());
+        printf("Child 1's PGRP: %d\n", getpgrp());
         
         active_process_group->process_group_id = getpid();
 
@@ -182,18 +184,15 @@ void handle_double_commmand(yash_shell_t *yash) {
         execvp(first_command_arguments[0], first_command_arguments);
     }
     else {
-        /*if (setpgid(child1_pid, child1_pid) == -1) {*/
-            /*perror("setpgid");*/
-        /*}*/
         // Parent
+        printf("Child 1 PID: %d\n", child1_pid);
+
         active_process_group->process_group_id = child1_pid;
 
         pid_t child2_pid = fork();
 
         if (child2_pid > 0) {
-            /*if (setpgid(child2_pid, child1_pid) == -1) {*/
-                /*perror("setpgid");*/
-            /*}*/
+            printf("Child 2 PID: %d\n", child2_pid);
 
             // Parent
             close(pipefd[0]);
@@ -210,13 +209,14 @@ void handle_double_commmand(yash_shell_t *yash) {
                 // Wait for the foreground job to complete (unless Ctrl-C or Ctrl-Z is sent).
                 while (child_processes_finished < 2) {
                     // '-1' indicates wait for any child process. 
-                    /*pid_t pid = waitpid(-1, &status, WUNTRACED | WCONTINUED);*/
                     pid_t pid = waitpid(-1, &status, WUNTRACED | WCONTINUED);
                 
                     if (pid == -1) {
                         perror("waitpid() error.");
                         exit(EXIT_FAILURE);
                     }
+                    
+                    printf("Received status update from PID: %d\n", pid);
 
                     if (WIFEXITED(status)) {
                         // Natural process termination
@@ -254,7 +254,8 @@ void handle_double_commmand(yash_shell_t *yash) {
         }
         else {
             // Child 2
-            // int setpgid_success = setpgid(0, child1_pid);   
+            setpgid(0, child1_pid);
+            printf("Child 2's PGRP: %d\n", getpgrp());
 
             command_t *command2 = active_process_group->commands[1];
 
