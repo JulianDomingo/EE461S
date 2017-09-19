@@ -79,6 +79,10 @@ void handle_single_command(yash_shell_t *yash) {
 
     if (child1_pid == 0) {
         // Child
+
+        // Even for just one command, I still make a process group to adhere to the requirements of my linked list data
+        // structure when storing new background jobs.
+        pid_t process_group_id = setpgrp();
         command_t *command = active_process_group->commands[0]; 
         
         handle_file_redirections(command);
@@ -168,7 +172,7 @@ void handle_double_commmand(yash_shell_t *yash) {
 
     if (child1_pid == 0) {
         // Child 1 (group leader)
-        pid_t session_id = setsid();
+        pid_t process_group_id = setpgrp();
 
         command_t *command1 = active_process_group->commands[0];
 

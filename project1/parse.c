@@ -71,7 +71,10 @@ bool parse_input(char *shell_input, yash_shell_t *yash) {
                     most_recent_process_group_in_bg->process_status = RUNNING;
 
                     // Wait for completion of the process, indicated by the "0" argument.
-                    waitpid(most_recent_process_group_in_bg->process_group_id, &status, 0);
+                    
+                    printf("Foreground PID: '%d'\n", most_recent_process_group_in_bg->process_group_id);
+                    pid_t pid = waitpid(most_recent_process_group_in_bg->process_group_id, &status, 0);
+                    printf("Waited for '%d'\n", pid);
                 }
             }
             else if (strcmp(token, "bg") == 0) {

@@ -97,8 +97,8 @@ int main(void) {
       close(pipefd[1]); // close the write end
       dup2(pipefd[0],STDIN_FILENO);
       char *myargs[3];
-      myargs[0] = strdup("grep");   // program: "grep" (word count)
-      myargs[1] = strdup("firefox");   // argument: "firefox"
+      myargs[0] = strdup("ls");   // program: "grep" (word count)
+      myargs[1] = strdup("-a");   // argument: "firefox"
       myargs[2] = NULL;           // marks end of array
       execvp(myargs[0], myargs);  // runs word count
     }
