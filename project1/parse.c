@@ -64,17 +64,14 @@ bool parse_input(char *shell_input, yash_shell_t *yash) {
                 }
                 else {
                     process_group_t *most_recent_process_group_in_bg = most_recent_bg_process_group_node->process_group;
-                    printf("Retrieved background process group with PGID: %d\n", most_recent_process_group_in_bg->process_group_id);
                
                     if (most_recent_process_group_in_bg->commands_size == 1) {
-                        printf("Sending continuation to job with 1 commands.\n");
                         // Don't invoke killpg() if there is no pipe (it would fail)
                         if (kill(most_recent_process_group_in_bg->process_group_id, SIGCONT) == - 1) {
                             perror("kill");
                         }
                     }
                     else {
-                        printf("Sending continuation to job with 2 commands.\n");
                         // There are two commands in the process group, so killpg() must be used 
                         if (killpg(most_recent_process_group_in_bg->process_group_id, SIGCONT) == -1) {
                             perror("killpg");
@@ -86,7 +83,8 @@ bool parse_input(char *shell_input, yash_shell_t *yash) {
                     most_recent_process_group_in_bg->process_status = RUNNING;
 
                     // Wait for completion of the process, indicated by the "0" argument.
-                    pid_t pid = waitpid(-1, &status, 0);
+                    // pid_t pid = waitpid(-1, &status, 0);
+                    pid_t pid = waitpid(most_recent_process_group_in_bg->process_group_id, &status, 0);
                 }
             }
             else if (strcmp(token, "bg") == 0) {

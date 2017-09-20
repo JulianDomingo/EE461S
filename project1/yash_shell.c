@@ -18,6 +18,10 @@
 yash_shell_t *create_yash_shell() {
     yash_shell_t *yash = malloc(sizeof(yash_shell_t));
 
+    if (tcsetpgrp(STDIN_FILENO, getpgid(getpid())) == -1) {
+        perror("tcsetpgrp()");
+    }
+
     yash->process_id = getpid();
     yash->active_process_group = NULL;
     yash->fg_job = NULL;

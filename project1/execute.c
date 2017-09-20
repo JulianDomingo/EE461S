@@ -168,12 +168,8 @@ void handle_double_commmand(yash_shell_t *yash) {
         // Child 1 (group leader)
         /*setsid();*/
         /*setpgrp();*/
-        tcsetpgrp(open("/dev/tty"), getpgrp()); 
-
-        printf("Child 1's PGID: %d\n", getpgrp());
-        printf("Child 1's result of getpid(): %d\n", getpid());
+        tcsetpgrp(open("/dev/tty", O_RDWR), getpgrp()); 
         
-        // active_process_group->process_group_id = getpid();
         active_process_group->process_group_id = getpgrp();
 
         command_t *command1 = active_process_group->commands[0];
@@ -189,11 +185,11 @@ void handle_double_commmand(yash_shell_t *yash) {
     else {
         // Parent
         /*active_process_group->process_group_id = child1_pid;*/
-        active_process_group->process_group_id = tcgetpgrp(STDIN_FILENO);
-
         pid_t child2_pid = fork();
 
         if (child2_pid > 0) {
+            active_process_group->process_group_id = tcgetpgrp(open("/dev/tty", O_RDWR));
+
             // Parent
             close(pipefd[0]);
             close(pipefd[1]);
@@ -213,7 +209,7 @@ void handle_double_commmand(yash_shell_t *yash) {
                     /*pid_t pid = waitpid(-1, &status, WUNTRACED | WCONTINUED);*/
                     
                     // Wait for any child process whose process group ID is equal to "active_process_group->process_group_id"
-                    pid_t pid = waitpid(active_process_group->process_group_id, &status, WUNTRACED | WCONTINUED);
+                    pid_t pid = waitpid(-active_process_group->process_group_id, &status, WUNTRACED);
                 
                     if (pid == -1) {
                         perror("waitpid() error.");
@@ -229,7 +225,6 @@ void handle_double_commmand(yash_shell_t *yash) {
                         child_processes_finished++;
                     } 
                     else if (WIFSTOPPED(status)) {
-                        printf("Suspended process_group with PID: %d\n", active_process_group->process_group_id);
                         // SIGTSTP  
                         active_process_group->process_status = STOPPED;
                         move_job_to_bg(active_process_group, yash->bg_jobs_linked_list);
@@ -258,8 +253,6 @@ void handle_double_commmand(yash_shell_t *yash) {
         else {
             // Child 2
             setpgid(0, child1_pid);
-            printf("Child 2's PGID: %d\n", getpgrp());
-            printf("Child 2's result of getpid(): %d\n", getpid());
 
             command_t *command2 = active_process_group->commands[1];
 
